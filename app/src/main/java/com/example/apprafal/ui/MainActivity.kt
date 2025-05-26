@@ -1,21 +1,41 @@
 package com.example.apprafal.ui
 
 import android.os.Bundle
-import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
-import com.example.apprafal.R
+import androidx.lifecycle.Observer
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.apprafal.data.AppDatabase
+import com.example.apprafal.data.PlayerRepo
+import com.example.apprafal.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
+    private lateinit var binding: ActivityMainBinding
+
+    private val viewModel: PlayerViewModel by viewModels {
+        PlayerViewModelFactory(PlayerRepo(AppDatabase.getDatabase(this).playerDao()))
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setContentView(R.layout.activity_main)
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
+
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
+        val adapter = PlayerListAdapter()
+        binding.recyclerView.adapter = adapter
+        binding.recyclerView.layoutManager = LinearLayoutManager(this)
+
+        viewModel.players.observe(this, Observer {
+            adapter.submitList(it)
+        })
+
+        binding.buttonAdd.setOnClickListener {
+            val name = binding.editTextPlayerName.text.toString()
+            if (name.isNotBlank()) {
+                viewModel.addPlayer(name)
+                binding.editTextPlayerName.text.clear()
+            }
         }
     }
 }
