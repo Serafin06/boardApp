@@ -1,6 +1,8 @@
 package com.example.apprafal.data
 
 
+
+
 class GameSessionRepo(private val dao: GameSessionDao) {
 
     suspend fun createSessionWithParticipants(session: GameSession, participants: List<GameSessionParticipant>) {
@@ -11,3 +13,5 @@ class GameSessionRepo(private val dao: GameSessionDao) {
 
     suspend fun getParticipants(sessionId: String) = dao.getParticipantsForSession(sessionId)
 }
+
+
