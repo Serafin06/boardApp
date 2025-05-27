@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.apprafal.R
 import java.util.Calendar
+import com.example.apprafal.data.*
 
 
 class CreateSessionActivity : AppCompatActivity() {
@@ -25,7 +26,10 @@ class CreateSessionActivity : AppCompatActivity() {
         val recycler = findViewById<RecyclerView>(R.id.playerRecycler)
         val button = findViewById<Button>(R.id.createSessionButton)
 
-        viewModel = ViewModelProvider(this)[GameSessionViewModel::class.java]
+        val dao = AppDatabase.getDatabase(applicationContext).gameSessionDao()
+        val repository = GameSessionRepo(dao) // tutaj podaj właściwą inicjalizację repozytorium
+        val factory = GameSessionViewModelFactory(repository)
+        viewModel = ViewModelProvider(this, factory)[GameSessionViewModel::class.java]
         playerAdapter = PlayerSelectAdapter()
 
         recycler.adapter = playerAdapter

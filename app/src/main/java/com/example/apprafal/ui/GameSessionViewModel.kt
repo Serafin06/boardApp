@@ -34,3 +34,16 @@ class GameSessionViewModel(private val repository: GameSessionRepo) : ViewModel(
         }
     }
 }
+
+class GameSessionViewModelFactory(
+    private val repository: GameSessionRepo
+) : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(GameSessionViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return GameSessionViewModel(repository) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
+    }
+}
+
