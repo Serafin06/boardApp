@@ -1,10 +1,13 @@
 package com.example.apprafal.ui
 
+import android.content.Intent
 import android.os.Bundle
+import android.widget.Button
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.apprafal.R
 import com.example.apprafal.data.AppDatabase
 import com.example.apprafal.data.PlayerRepo
 import com.example.apprafal.databinding.ActivityMainBinding
@@ -36,6 +39,12 @@ class MainActivity : AppCompatActivity() {
                 viewModel.addPlayer(name)
                 binding.editTextPlayerName.text.clear()
             }
+        }
+        val createSessionButton = findViewById<Button>(R.id.createSessionButton)
+
+        createSessionButton.setOnClickListener {
+            val intent = Intent(this, CreateSessionActivity::class.java)
+            startActivity(intent)
         }
     }
 }

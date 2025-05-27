@@ -1,0 +1,55 @@
+package com.example.apprafal.ui
+
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.CheckedTextView
+import androidx.recyclerview.widget.RecyclerView
+import com.example.apprafal.data.Player
+
+
+class PlayerSelectAdapter : RecyclerView.Adapter<PlayerSelectAdapter.PlayerViewHolder>() {
+
+    private var players: List<Player> = emptyList()
+    private val selectedPlayers = mutableSetOf<Player>()
+
+    fun submitList(newList: List<Player>) {
+        players = newList
+        selectedPlayers.clear()
+        notifyDataSetChanged()
+    }
+
+    fun getSelectedPlayers(): List<Player> = selectedPlayers.toList()
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PlayerViewHolder {
+        val view = LayoutInflater.from(parent.context)
+            .inflate(android.R.layout.simple_list_item_multiple_choice, parent, false)
+        return PlayerViewHolder(view)
+    }
+
+    override fun onBindViewHolder(holder: PlayerViewHolder, position: Int) {
+        val player = players[position]
+        holder.bind(player)
+    }
+
+    override fun getItemCount(): Int = players.size
+
+    inner class PlayerViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        private val checkBox: CheckedTextView = itemView.findViewById(android.R.id.text1)
+
+        fun bind(player: Player) {
+            checkBox.text = player.name
+            checkBox.isChecked = selectedPlayers.contains(player)
+
+            itemView.setOnClickListener {
+                if (selectedPlayers.contains(player)) {
+                    selectedPlayers.remove(player)
+                    checkBox.isChecked = false
+                } else {
+                    selectedPlayers.add(player)
+                    checkBox.isChecked = true
+                }
+            }
+        }
+    }
+}
