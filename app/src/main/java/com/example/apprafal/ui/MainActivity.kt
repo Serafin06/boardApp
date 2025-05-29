@@ -29,7 +29,7 @@ class MainActivity : AppCompatActivity() {
         binding.recyclerView.adapter = adapter
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
 
-        viewModel.players.observe(this, Observer {
+        viewModel.allPlayers.observe(this, Observer {
             adapter.submitList(it)
         })
 

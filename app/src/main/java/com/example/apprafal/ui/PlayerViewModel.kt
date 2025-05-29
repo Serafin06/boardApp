@@ -7,7 +7,8 @@ import kotlinx.coroutines.launch
 import java.util.*
 
 class PlayerViewModel(private val repository: PlayerRepo) : ViewModel() {
-    val players: LiveData<List<Player>> = repository.allPlayers
+
+    val allPlayers: LiveData<List<Player>> = repository.getAllPlayers()
 
     fun addPlayer(name: String) {
         val newPlayer = Player(UUID.randomUUID().toString(), name)

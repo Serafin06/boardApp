@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
 import com.example.apprafal.data.*
+import java.util.LinkedList
 
 class GameSessionViewModel(private val repository: GameSessionRepo) : ViewModel() {
 
@@ -33,6 +34,11 @@ class GameSessionViewModel(private val repository: GameSessionRepo) : ViewModel(
         viewModelScope.launch {
             _sessions.postValue(repository.getAllSessions())
         }
+    }
+    fun generatePlayerQueue(selectedPlayers: List<Player>): List<Player>{
+        val queue = LinkedList<Player>()
+        queue.addAll(selectedPlayers.sortedBy{ it.name })
+        return queue
     }
 }
 

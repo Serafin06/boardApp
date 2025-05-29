@@ -10,9 +10,9 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.apprafal.R
 import java.util.Calendar
-import com.example.apprafal.ui.*
 import com.example.apprafal.data.AppDatabase
 import com.example.apprafal.data.GameSessionRepo
+import com.example.apprafal.data.PlayerRepo
 
 
 class CreateSessionActivity : AppCompatActivity() {
@@ -28,6 +28,17 @@ class CreateSessionActivity : AppCompatActivity() {
         val recycler = findViewById<RecyclerView>(R.id.playerRecycler)
         val button = findViewById<Button>(R.id.createSessionButton)
 
+        val playerDao = AppDatabase.getDatabase(applicationContext).playerDao()
+        val playerRepository = PlayerRepo(playerDao)
+        val playerViewModel = PlayerViewModel(playerRepository)
+
+        playerAdapter = PlayerSelectAdapter()
+        recycler.adapter = playerAdapter
+        recycler.layoutManager = LinearLayoutManager(this)
+
+        playerViewModel.allPlayers.observe(this) { players ->
+            playerAdapter.submitList(players)
+        }
 
         val dao = AppDatabase.getDatabase(applicationContext).gameSessionDao()
         val repository = GameSessionRepo(dao)
@@ -50,6 +61,8 @@ class CreateSessionActivity : AppCompatActivity() {
             val selectedPlayers = playerAdapter.getSelectedPlayers()
 
             viewModel.createSession(timestamp, selectedPlayers)
+
+            val playerQueue = viewModel.generatePlayerQueue(selectedPlayers)
 
             Toast.makeText(this, "Session created!", Toast.LENGTH_SHORT).show()
             finish() // Zamknij aktywność po utworzeniu sesji
