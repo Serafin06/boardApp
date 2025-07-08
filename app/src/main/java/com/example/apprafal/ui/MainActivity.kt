@@ -46,5 +46,9 @@ class MainActivity : AppCompatActivity() {
             val intent = Intent(this, CreateSessionActivity::class.java)
             startActivity(intent)
         }
+        val historyButton = findViewById<Button>(R.id.buttonHistory)
+        historyButton.setOnClickListener {
+            startActivity(Intent(this, GameHistoryActivity::class.java))
+        }
     }
 }
