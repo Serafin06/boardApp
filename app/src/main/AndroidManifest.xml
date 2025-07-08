@@ -22,6 +22,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".ui.CreateSessionActivity" />
+        <activity android:name=".ui.GameHistoryActivity" />
     </application>
 
 </manifest>

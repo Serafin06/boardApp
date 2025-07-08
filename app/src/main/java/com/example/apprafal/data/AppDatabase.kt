@@ -6,12 +6,13 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 
 @Database(
-    entities = [Player::class, GameSession::class, GameSessionParticipant::class],
+    entities = [Player::class, GameSession::class, GameSessionParticipant::class, GamePick::class],
     version = 1
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun playerDao(): PlayerDao
-    abstract fun gameSessionDao(): GameSessionDao  // <-- dodaj tutaj
+    abstract fun gameSessionDao(): GameSessionDao
+    abstract fun gamePickDao(): GamePickDao
 
     companion object {
         @Volatile
