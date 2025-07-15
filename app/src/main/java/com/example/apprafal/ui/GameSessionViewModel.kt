@@ -20,7 +20,7 @@ class GameSessionViewModel(private val repository: GameSessionRepo) : ViewModel(
             val participants = selectedPlayers.mapIndexed { index, player ->
                 GameSessionParticipant(
                     sessionId = session.id,
-                    playerId = player.id,
+                    playerId = player.id.toString(),
                     isPresent = true,
                     queuePosition = index // na razie kolejność wg kliknięcia
                 )

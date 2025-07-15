@@ -7,8 +7,10 @@ import com.android.identity.util.UUID
 @Entity
 data class GameQueueEntry(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    val sessionId: String,
     val playerId: Int,
-    val position: Int
+    val position: Int,
+    val isSkipped: Boolean = false
 )
 
 @Entity

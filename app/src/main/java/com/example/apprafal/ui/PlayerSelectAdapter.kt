@@ -31,6 +31,7 @@ class PlayerSelectAdapter : RecyclerView.Adapter<PlayerSelectAdapter.PlayerViewH
     override fun onBindViewHolder(holder: PlayerViewHolder, position: Int) {
         val player = players[position]
         holder.bind(player)
+
     }
 
     override fun getItemCount(): Int = players.size
@@ -42,8 +43,11 @@ class PlayerSelectAdapter : RecyclerView.Adapter<PlayerSelectAdapter.PlayerViewH
             checkBox.text = player.name
             checkBox.isChecked = selectedPlayers.contains(player)
 
-            checkBox.setOnCheckedChangeListener(null) // zapobiega podwójnym wywołaniom
-            checkBox.isChecked = selectedPlayers.contains(player)
+            if (player.canChooseGame) {
+                checkBox.setTextColor(itemView.context.getColor(R.color.authorized_player))
+            } else {
+                checkBox.setTextColor(itemView.context.getColor(R.color.default_player))
+            }
 
             checkBox.setOnCheckedChangeListener { _, isChecked ->
                 if (isChecked) {

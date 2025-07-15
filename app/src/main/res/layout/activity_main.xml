@@ -28,12 +28,12 @@
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerView"
-        android:layout_width="398dp"
-        android:layout_height="456dp"
+        android:layout_width="373dp"
+        android:layout_height="410dp"
         android:layout_margin="16dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/editTextPlayerName" />
+        app:layout_constraintTop_toBottomOf="@+id/checkboxCanChoose" />
 
     <Button
         android:id="@+id/createSessionButton"
@@ -68,5 +68,14 @@
         app:layout_constraintHorizontal_bias="0.16"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/recyclerView" />
+
+    <CheckBox
+        android:id="@+id/checkboxCanChoose"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Gracz może wybierać gry"
+        app:layout_constraintTop_toBottomOf="@+id/editTextPlayerName"
+        tools:ignore="MissingConstraints" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

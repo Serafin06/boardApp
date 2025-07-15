@@ -10,12 +10,13 @@ class PlayerViewModel(private val repository: PlayerRepo) : ViewModel() {
 
     val allPlayers: LiveData<List<Player>> = repository.getAllPlayers()
 
-    fun addPlayer(name: String) {
-        val newPlayer = Player(UUID.randomUUID().toString(), name)
+    fun addPlayer(name: String, queuePosition: Int, canChooseGame: Boolean) {
         viewModelScope.launch {
-            repository.insert(newPlayer)
+            val player = Player(name = name, queuePosition = queuePosition, canChooseGame = canChooseGame)
+            repository.insert(player)
         }
     }
+
 }
 
 class PlayerViewModelFactory(private val repository: PlayerRepo) : ViewModelProvider.Factory {
@@ -23,3 +24,4 @@ class PlayerViewModelFactory(private val repository: PlayerRepo) : ViewModelProv
         return PlayerViewModel(repository) as T
     }
 }
+

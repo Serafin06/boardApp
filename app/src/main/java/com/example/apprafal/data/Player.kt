@@ -5,6 +5,8 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "players")
 data class Player(
-    @PrimaryKey val id: String, // użyj UUID
-    val name: String
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    val name: String,
+    val canChooseGame: Boolean = false,
+    val queuePosition: Int? = null
 )
