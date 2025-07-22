@@ -80,24 +80,11 @@ class MainActivity : AppCompatActivity() {
         historyButton.setOnClickListener {
             startActivity(Intent(this, GameHistoryActivity::class.java))
         }
-        val builder = AlertDialog.Builder(this)
-        builder.setTitle("Podaj miejsce w kolejce")
 
-        val input = EditText(this)
-        input.inputType = InputType.TYPE_CLASS_NUMBER
-        builder.setView(input)
-
-        builder.setPositiveButton("OK") { _, _ ->
-            val name = binding.editTextPlayerName.text.toString()
-            val position = input.text.toString().toIntOrNull()
-
-            if (name.isNotBlank() && position != null) {
-                viewModel.addPlayer(name, position, canChooseGame = true)
-                binding.editTextPlayerName.text.clear()
-            }
+        val queueButton = findViewById<Button>(R.id.queue)
+        queueButton.setOnClickListener {
+            startActivity(Intent(this, QueueActivity::class.java))
         }
-
-        builder.setNegativeButton("Anuluj") { dialog, _ -> dialog.cancel() }
 
     }
 }

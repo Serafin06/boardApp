@@ -10,4 +10,8 @@ interface PlayerDao {
 
     @Query("SELECT * FROM players")
     fun getAllPlayers(): LiveData<List<Player>>
+
+    @Query("SELECT * FROM players WHERE canChooseGame = 1 ORDER BY queuePosition ASC")
+    fun getQueue(): LiveData<List<Player>>
+
 }

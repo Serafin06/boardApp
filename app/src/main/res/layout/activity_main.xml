@@ -44,7 +44,8 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.8"
         app:layout_constraintStart_toEndOf="@+id/buttonHistory"
-        app:layout_constraintTop_toBottomOf="@+id/recyclerView" />
+        app:layout_constraintTop_toBottomOf="@+id/recyclerView"
+        app:layout_constraintVertical_bias="0.100000024" />
 
     <TextView
         android:id="@+id/textView"
@@ -67,7 +68,8 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.16"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/recyclerView" />
+        app:layout_constraintTop_toBottomOf="@+id/recyclerView"
+        app:layout_constraintVertical_bias="0.100000024" />
 
     <CheckBox
         android:id="@+id/checkboxCanChoose"
@@ -76,6 +78,18 @@
         android:text="Gracz może wybierać gry"
         app:layout_constraintTop_toBottomOf="@+id/editTextPlayerName"
         tools:ignore="MissingConstraints" />
+
+    <Button
+        android:id="@+id/queue"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Kolejka"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.498"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/buttonHistory"
+        app:layout_constraintVertical_bias="0.533" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
