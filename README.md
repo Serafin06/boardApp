@@ -53,19 +53,21 @@ Build and run the app on an emulator or physical device.
 
 ---
 ## 📂 Project Structure (Key Files)
-MainActivity – Entry point with navigation to features
+- MainActivity – Entry point with navigation to features
 
-Player.kt, Session.kt, GamePick.kt – Data classes for Room
+- Player.kt, Session.kt, GamePick.kt – Data classes for Room
 
-PlayerListAdapter, GamePickListAdapter – Adapters for RecyclerView
+- PlayerListAdapter, GamePickListAdapter – Adapters for RecyclerView
 
-GameHistoryActivity – Displays game history
+- GameHistoryActivity – Displays game history
 
-GameQueueEntry.kt – Data class for queue system
+- GameQueueEntry.kt – Data class for queue system
 
-(Planned) QueueActivity – Upcoming screen to show picking order
+- (Planned) QueueActivity – Upcoming screen to show picking order
 
+---
 ## 👤 Author
+
 Made with ❤️ by ##Serafin06
 
 Feel free to contribute or open an issue if you have ideas or questions!
