@@ -68,6 +68,6 @@ Build and run the app on an emulator or physical device.
 ---
 ## 👤 Author
 
-Made with ❤️ by ##Serafin06
+Made with ❤️ by **Serafin06**
 
 Feel free to contribute or open an issue if you have ideas or questions!
