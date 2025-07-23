@@ -1,102 +1,71 @@
-# 🎲 BoardApp – Board Game Group Manager (Android + Room)
+# BoardApp 🎲
 
-[![Made with Kotlin](https://img.shields.io/badge/Kotlin-Android-blueviolet.svg?logo=kotlin&logoColor=white)](https://kotlinlang.org/)
-[![Room Database](https://img.shields.io/badge/Database-Room-informational)](https://developer.android.com/jetpack/androidx/releases/room)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
-
-**BoardApp** is an Android application for managing board game player groups.  
-Each player can add themselves to the group and, later, add their own games.  
-This is just the first step toward a fully featured board game session manager.
+**BoardApp** is an Android application for organizing board game meetups. It helps manage players, track attendance, and record game picks in a fair FIFO order.
 
 ---
 
-## ✨ Features (Current MVP)
+## ✅ Current Features
 
-- ✅ Add players to the local database
-- ✅ Display the current player list
-- ✅ MVVM architecture
-- ✅ Room for local persistence
-- 🔜 Add board games per player
-- 🔜 Game night registration & rotation logic
-- 🔜 Game history and chooser tracking
+### 👥 Player Management
+- Add players with a name.
+- Mark players as allowed to pick a game (`canChooseGame`).
+- Assign a **queue position** when the player is allowed to pick games.
 
----
+### 📅 Session Creation
+- Create a board game session with a selected date.
+- Select which players are attending.
+- Store each session locally using Room Database.
 
-## 🧱 Tech Stack
-
-- **Kotlin**
-- **Android Jetpack**
-  - [Room](https://developer.android.com/training/data-storage/room)
-  - [LiveData & ViewModel](https://developer.android.com/topic/libraries/architecture/viewmodel)
-  - [RecyclerView](https://developer.android.com/guide/topics/ui/layout/recyclerview)
-- MVVM Architecture
-- UUID-based primary keys (sync-ready)
+### 📜 Game History
+- Track who picked which game during previous sessions.
+- View all game picks using a dedicated `GameHistoryActivity`.
 
 ---
 
-## 🔮 Planned Features
-
-- Add board games per player with:
-  - Min/max player count
-  - Estimated game duration
-- Game nights (event-based play sessions)
-- Player rotation for choosing games
-- Skipping absent players without losing queue position
-- Game history (who chose which game and when)
+## 🔄 Coming Soon
+- **Game Picker Queue View**: A screen that shows the current game picking queue (FIFO).
+- **Game Selection Screen**: Where the player at the front of the queue picks a game.
+- **Automatic Queue Rotation** after each pick.
+- **Firebase integration** for syncing across devices (future).
+- **Improved UI/UX** and support for editing/deleting players and sessions.
 
 ---
 
-## 🧩 Architecture Overview
+## 🛠️ Tech Stack
 
-```text
-AppDatabase
-   └── PlayerDao
-         └── PlayerRepository
-               └── PlayerViewModel
-                     └── MainActivity (UI)
-The app is structured to allow a future switch from Room to Firebase or PostgreSQL backend.
+- Kotlin + Android Jetpack
+- Room (local database)
+- LiveData + ViewModel
+- RecyclerView for displaying lists
+- MVVM architecture
 
-📦 How to Run
-Clone the repository:
+---
 
-bash
-Kopiuj
-Edytuj
-git clone https://github.com/Serafin06/boardapp.git
-Open in Android Studio.
+## 🚀 Getting Started
 
-Build & run on device or emulator.
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/Serafin06/boardApp.git
+   cd boardApp
+Open the project in Android Studio.
 
-📁 Project Structure
-pgsql
-Kopiuj
-Edytuj
-com.example.boardapp
-│
-├── data/
-│   ├── AppDatabase.kt
-│   ├── Player.kt
-│   ├── PlayerDao.kt
-│   └── PlayerRepository.kt
-│
-├── ui/
-│   ├── PlayerViewModel.kt
-│   ├── PlayerListAdapter.kt
-│   └── MainActivity.kt
-│
-└── res/layout/
-    ├── activity_main.xml
-    └── player_item.xml
-🧭 Migration Ready
-Uses Repository pattern (Room → Firebase swap ready)
+Build and run the app on an emulator or physical device.
 
-Uses UUIDs instead of local auto-increment
+📂 Project Structure (Key Files)
+MainActivity – Entry point with navigation to features
 
-Clean separation of concerns
+Player.kt, Session.kt, GamePick.kt – Data classes for Room
 
-📃 License
-This project is licensed under the MIT License.
+PlayerListAdapter, GamePickListAdapter – Adapters for RecyclerView
 
-👨‍💻 Author
-Developed by Serafin06
-Contributions and ideas welcome – feel free to fork and improve!
+GameHistoryActivity – Displays game history
+
+GameQueueEntry.kt – Data class for queue system
+
+(Planned) QueueActivity – Upcoming screen to show picking order
+
+📸 Screenshots (Coming Soon)
+👤 Author
+Made with ❤️ by Serafin06
+
+Feel free to contribute or open an issue if you have ideas or questions!
