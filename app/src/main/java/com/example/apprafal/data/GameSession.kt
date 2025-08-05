@@ -34,6 +34,7 @@ data class GameSessionParticipant(
     val sessionId: String,
     val playerId: String,
     val isPresent: Boolean = true,
-    val queuePosition: Int // ustalasz sam
-)
+    val choseGame: Boolean = false,
+    val queuePosition: Int,
+    )
 

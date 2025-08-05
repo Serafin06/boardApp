@@ -1,56 +1,47 @@
 package com.example.apprafal.ui
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.launch
 import com.example.apprafal.data.*
-import java.util.LinkedList
 
-class GameSessionViewModel(private val repository: GameSessionRepo) : ViewModel() {
+class GameSessionViewModel(
+    private val sessionRepo: GameSessionRepo,
+    private val queueRepo: GameQueueRepo
+) : ViewModel() {
 
-    private val _sessions = MutableLiveData<List<GameSession>>()
-    val sessions: LiveData<List<GameSession>> = _sessions
+    suspend fun createSessionAndReturnId(date: Long, selectedPlayers: List<Player>): String {
+        val session = GameSession(date = date)
 
-    fun createSession(date: Long, selectedPlayers: List<Player>) {
-        viewModelScope.launch {
-            val session = GameSession(date = date)
-            val participants = selectedPlayers.mapIndexed { index, player ->
-                GameSessionParticipant(
-                    sessionId = session.id,
-                    playerId = player.id.toString(),
-                    isPresent = true,
-                    queuePosition = index // na razie kolejność wg kliknięcia
-                )
-            }
-            repository.createSessionWithParticipants(session, participants)
-            loadSessions()
+        val participants = selectedPlayers.mapIndexed { index, player ->
+            GameSessionParticipant(
+                sessionId = session.id,
+                playerId = player.id.toString(),
+                isPresent = true,
+                queuePosition = index
+            )
         }
-    }
 
-    fun loadSessions() {
-        viewModelScope.launch {
-            _sessions.postValue(repository.getAllSessions())
+        val queueEntries = selectedPlayers.mapIndexed { index, player ->
+            GameQueueEntry(
+                sessionId = session.id,
+                playerId = player.id,
+                position = index
+            )
         }
-    }
-    fun generatePlayerQueue(selectedPlayers: List<Player>): List<Player>{
-        val queue = LinkedList<Player>()
-        queue.addAll(selectedPlayers.sortedBy{ it.name })
-        return queue
+
+        sessionRepo.createSessionWithParticipants(session, participants)
+        queueEntries.forEach { queueRepo.insert(it) } // <-- TO DODAJE KOLEJKĘ
+
+        return session.id
     }
 }
 
 class GameSessionViewModelFactory(
-    private val repository: GameSessionRepo
+    private val sessionRepo: GameSessionRepo,
+    private val queueRepo: GameQueueRepo
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(GameSessionViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return GameSessionViewModel(repository) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
+        return GameSessionViewModel(sessionRepo, queueRepo) as T
     }
 }
 

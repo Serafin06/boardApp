@@ -1,7 +1,7 @@
 package com.example.apprafal.data
 
 import androidx.lifecycle.LiveData
-import com.example.apprafal.data.PlayerDao
+
 
 class PlayerRepo (private val dao: PlayerDao) {
     fun getAllPlayers() = dao.getAllPlayers()

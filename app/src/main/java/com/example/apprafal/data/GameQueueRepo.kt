@@ -7,21 +7,24 @@ import kotlinx.coroutines.launch
 
 class GameQueueRepo(private val dao: GameQueueDao) {
 
-    suspend fun createQueue(sessionId: String, playerIds: List<Int>) {
-        val entries = playerIds.mapIndexed { index, playerId ->
-            GameQueueEntry(
-                sessionId = sessionId,
-                playerId = playerId,
-                position = index
-            )
-        }
-        dao.clearQueue(sessionId)
-        dao.insertAll(entries)
-    }
 
     suspend fun getQueue(sessionId: String): List<GameQueueEntry> = dao.getQueue(sessionId)
 
     suspend fun skipPlayer(sessionId: String, playerId: Int) = dao.skipPlayer(sessionId, playerId)
+
+    suspend fun getFirstInQueue(sessionId: String): GameQueueEntry? =
+        dao.getFirstInQueue(sessionId)
+
+    suspend fun moveToEnd(sessionId: String, entry: GameQueueEntry) {
+        val maxPos = dao.getMaxPosition(sessionId) ?: 0
+        val updated = entry.copy(position = maxPos + 1)
+        dao.updateEntry(updated)
+    }
+
+    suspend fun insert(entry: GameQueueEntry) {
+        dao.insert(entry)
+    }
+
 }
 
 class GameQueueViewModel(private val repo: GameQueueRepo) : ViewModel() {

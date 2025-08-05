@@ -25,4 +25,6 @@ data class GamePick(
 class GamePickRepo(private val dao: GamePickDao) {
     suspend fun insert(pick: GamePick) = dao.insert(pick)
     fun getPicksForSession(sessionId: String) = dao.getPicksForSession(sessionId)
+
+
 }

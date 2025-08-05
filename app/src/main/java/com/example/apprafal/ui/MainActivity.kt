@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.text.InputType
 import android.widget.Button
 import android.widget.EditText
+import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
@@ -57,10 +58,13 @@ class MainActivity : AppCompatActivity() {
                         if (position != null) {
                             viewModel.addPlayer(name, position, canChoose)
                             binding.editTextPlayerName.text.clear()
-                        }
+                        } else
+                            Toast.makeText(this, "Gracz nie został dodany", Toast.LENGTH_SHORT).show()
                     }
 
-                    builder.setNegativeButton("Anuluj") { dialog, _ -> dialog.cancel() }
+                    builder.setNegativeButton("Anuluj") { dialog, _ -> dialog.cancel()
+                        Toast.makeText(this, "Gracz nie został dodany", Toast.LENGTH_SHORT).show()}
+
                     builder.show()
                 } else {
                     // Gracz nie może wybierać, więc nie przypisujemy pozycji

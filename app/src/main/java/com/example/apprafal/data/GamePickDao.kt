@@ -13,4 +13,6 @@ interface GamePickDao {
 
     @Query("SELECT * FROM GamePick WHERE sessionId = :sessionId")
     fun getPicksForSession(sessionId: String): LiveData<List<GamePick>>
+
+
 }
