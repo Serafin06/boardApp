@@ -29,6 +29,7 @@ class GameSessionViewModel(
             )
         }
 
+
         sessionRepo.createSessionWithParticipants(session, participants)
         queueEntries.forEach { queueRepo.insert(it) } // <-- TO DODAJE KOLEJKĘ
 

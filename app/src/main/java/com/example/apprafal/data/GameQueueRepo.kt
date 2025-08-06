@@ -17,7 +17,7 @@ class GameQueueRepo(private val dao: GameQueueDao) {
 
     suspend fun moveToEnd(sessionId: String, entry: GameQueueEntry) {
         val maxPos = dao.getMaxPosition(sessionId) ?: 0
-        val updated = entry.copy(position = maxPos + 1)
+        val updated = entry.copy(position =+ (maxPos + 1))
         dao.updateEntry(updated)
     }
 

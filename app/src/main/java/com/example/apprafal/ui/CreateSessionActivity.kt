@@ -17,6 +17,8 @@ import com.example.apprafal.data.GameSessionRepo
 import com.example.apprafal.data.PlayerRepo
 import android.content.Intent
 import androidx.lifecycle.lifecycleScope
+import com.example.apprafal.data.GamePick
+import com.example.apprafal.data.GamePickRepo
 import com.example.apprafal.data.GameQueueRepo
 import kotlinx.coroutines.launch
 
@@ -87,10 +89,21 @@ class CreateSessionActivity : AppCompatActivity() {
                     runOnUiThread {
                         val dialog = AlertDialog.Builder(this@CreateSessionActivity)
                             .setTitle("${player.name} wybiera grę")
-                            .setMessage("Kliknij OK, aby kontynuować")
+                            .setMessage("Ciekawe co wybierze")
                             .setPositiveButton("OK") { _, _ ->
                                 lifecycleScope.launch {
                                     queueRepo.moveToEnd(sessionId, entry)
+
+                                    val pickDao = AppDatabase.getDatabase(applicationContext).gamePickDao()
+                                    val pickRepo = GamePickRepo(pickDao)
+
+                                    val gamePick = GamePick(
+                                        sessionId = sessionId,
+                                        playerId = entry.playerId.toString(),
+                                        gameName = "Kotlin", // tutaj bedzie wybor gry
+                                        timestamp = System.currentTimeMillis()
+                                    )
+                                    pickRepo.insert(gamePick)
 
                                     val intent = Intent(
                                         this@CreateSessionActivity,
