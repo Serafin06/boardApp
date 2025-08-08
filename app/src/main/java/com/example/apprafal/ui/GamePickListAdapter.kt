@@ -1,5 +1,6 @@
 package com.example.apprafal.ui
 
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -7,16 +8,28 @@ import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.example.apprafal.R
-
-
 import com.example.apprafal.data.GamePick
 
-class GamePickListAdapter : androidx.recyclerview.widget.ListAdapter<GamePick, GamePickListAdapter.PickViewHolder>(DiffCallback()){
+// Data class dla wyświetlania z imionami graczy
+data class GamePickWithPlayerName(
+    val playerName: String,
+    val gameName: String,
+    val timestamp: Long,
+    val originalPick: GamePick
+)
+
+class GamePickListAdapter :
+    androidx.recyclerview.widget.ListAdapter<GamePickWithPlayerName, GamePickListAdapter.PickViewHolder>(
+        DiffCallback()
+    ) {
 
     inner class PickViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        fun bind(item: GamePick) {
+        fun bind(item: GamePickWithPlayerName) {
+            Log.d("ADAPTER_DEBUG", "🔗 Displaying: ${item.playerName} -> ${item.gameName}")
+
+            // Używaj istniejącego TextView
             itemView.findViewById<TextView>(R.id.pickText).text =
-                "Gracz: ${item.playerId} wybrał grę: ${item.gameName}"
+                "${item.playerName} wybrał grę: ${item.gameName}"
         }
     }
 
@@ -26,11 +39,16 @@ class GamePickListAdapter : androidx.recyclerview.widget.ListAdapter<GamePick, G
     }
 
     override fun onBindViewHolder(holder: PickViewHolder, position: Int) {
-        holder.bind(getItem(position))
+        val item = getItem(position)
+        Log.d("ADAPTER_DEBUG", "📱 Binding item $position: ${item.playerName}")
+        holder.bind(item)
     }
 
-    class DiffCallback : DiffUtil.ItemCallback<GamePick>() {
-        override fun areItemsTheSame(oldItem: GamePick, newItem: GamePick) = oldItem.id == newItem.id
-        override fun areContentsTheSame(oldItem: GamePick, newItem: GamePick) = oldItem == newItem
+    class DiffCallback : DiffUtil.ItemCallback<GamePickWithPlayerName>() {
+        override fun areItemsTheSame(oldItem: GamePickWithPlayerName, newItem: GamePickWithPlayerName) =
+            oldItem.originalPick.id == newItem.originalPick.id
+
+        override fun areContentsTheSame(oldItem: GamePickWithPlayerName, newItem: GamePickWithPlayerName) =
+            oldItem == newItem
     }
 }

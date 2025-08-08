@@ -22,9 +22,3 @@ data class GamePick(
     val timestamp: Long = System.currentTimeMillis()
 )
 
-class GamePickRepo(private val dao: GamePickDao) {
-    suspend fun insert(pick: GamePick) = dao.insert(pick)
-    fun getPicksForSession(sessionId: String) = dao.getPicksForSession(sessionId)
-
-
-}
