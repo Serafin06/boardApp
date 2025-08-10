@@ -7,59 +7,56 @@ import android.util.Log
 
 class GameSessionViewModel(
     private val sessionRepo: GameSessionRepo,
-    private val queueRepo: GameQueueRepo,
-    private val playerRepo: PlayerRepo // Dodajemy repo graczy
+    private val playerRepo: PlayerRepo
 ) : ViewModel() {
 
+    suspend fun createSession(date: Long): String {
+        return sessionRepo.createSession(date)
+    }
+
     suspend fun createSessionAndReturnId(date: Long, selectedPlayers: List<Player>): String {
-        Log.d("SESSION_CREATE", "🏗️ Tworzenie sesji z ${selectedPlayers.size} graczami")
+        return sessionRepo.createSessionWithParticipants(date, selectedPlayers)
+    }
 
-        val session = GameSession(date = date)
+    suspend fun getAllSessions(): List<GameSession> = sessionRepo.getAllSessions()
 
-        // 1. Uczestnicy sesji (w kolejności dodania - dla uczestnictwa)
-        val participants = selectedPlayers.mapIndexed { index, player ->
-            GameSessionParticipant(
-                sessionId = session.id,
-                playerId = player.id.toString(),
-                isPresent = true,
-                queuePosition = index
-            )
-        }
+    // METODY KOLEJKI - przeniesione z GameQueueViewModel
+    suspend fun getActiveQueue(sessionId: String): List<GameSessionParticipant> {
+        return sessionRepo.getActiveQueue(sessionId)
+    }
 
-        // 2. ⚠️ KLUCZOWA ZMIANA: Kolejka gry według WAG, nie kolejności!
-        val eligiblePlayers = selectedPlayers.filter { it.canChooseGame }
-        Log.d("SESSION_CREATE", "🎯 Uprawnieni gracze: ${eligiblePlayers.map { "${it.name}(waga:${it.queuePosition})" }}")
+    suspend fun getFirstAvailablePicker(sessionId: String): GameSessionParticipant? {
+        return sessionRepo.getFirstAvailablePicker(sessionId)
+    }
 
-        // Sortuj według wag (niższa waga = wyższa pozycja w kolejce)
-        val sortedByWeight = eligiblePlayers.sortedBy { it.queuePosition ?: Int.MAX_VALUE }
-        Log.d("SESSION_CREATE", "📊 Posortowani według wag: ${sortedByWeight.map { "${it.name}(${it.queuePosition})" }}")
+    suspend fun movePlayerToEndOfQueue(sessionId: String, participant: GameSessionParticipant) {
+        sessionRepo.moveParticipantToEndOfQueue(sessionId, participant)
+    }
 
-        val queueEntries = sortedByWeight.mapIndexed { index, player ->
-            Log.d("SESSION_CREATE", "📝 Pozycja $index: ${player.name} (ID:${player.id}, waga:${player.queuePosition})")
-            GameQueueEntry(
-                sessionId = session.id,
-                playerId = player.id,
-                position = index, // Pozycja według wag!
-                isSkipped = false
-            )
-        }
+    suspend fun skipPlayer(sessionId: String, playerId: Int) {
+        sessionRepo.skipParticipant(sessionId, playerId)
+    }
 
-        Log.d("SESSION_CREATE", "✅ Utworzono ${queueEntries.size} wpisów kolejki")
+    // Dla UI
+    suspend fun getParticipantsWithNames(sessionId: String): List<ParticipantWithName> {
+        return sessionRepo.getParticipantsWithNames(sessionId)
+    }
 
-        // Zapisz do bazy
-        sessionRepo.createSessionWithParticipants(session, participants)
-        queueEntries.forEach { queueRepo.insert(it) }
-
-        return session.id
+    suspend fun getCurrentPicker(sessionId: String): GameSessionParticipant? {
+        return sessionRepo.getFirstAvailablePicker(sessionId)
     }
 }
 
+// Zaktualizowany Factory
 class GameSessionViewModelFactory(
     private val sessionRepo: GameSessionRepo,
-    private val queueRepo: GameQueueRepo,
-    private val playerRepo: PlayerRepo // Dodajemy PlayerRepo
+    private val playerRepo: PlayerRepo
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        return GameSessionViewModel(sessionRepo, queueRepo, playerRepo) as T
+        if (modelClass.isAssignableFrom(GameSessionViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return GameSessionViewModel(sessionRepo, playerRepo) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }

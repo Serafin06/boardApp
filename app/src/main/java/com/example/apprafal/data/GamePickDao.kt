@@ -5,6 +5,7 @@ import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.Update
 
 
 @Dao
@@ -12,19 +13,30 @@ interface GamePickDao {
     @Insert
     suspend fun insert(gamePick: GamePick)
 
-    // Pobierz tylko 5 ostatnich wyborów (najnowsze pierwsze)
-    @Query("SELECT * FROM GamePick WHERE sessionId = :sessionId ORDER BY timestamp DESC LIMIT 5")
-    fun getPicksForSession(sessionId: String): LiveData<List<GamePick>>
-
-    // Pobierz ostatni wybór dla usunięcia
-    @Query("SELECT * FROM GamePick WHERE sessionId = :sessionId ORDER BY timestamp DESC LIMIT 1")
-    suspend fun getLastPick(sessionId: String): GamePick?
-
-    // Usuń konkretny wybór
     @Delete
     suspend fun delete(gamePick: GamePick)
 
-    // Pobierz wszystkie wybory (dla debugowania)
-    @Query("SELECT * FROM GamePick WHERE sessionId = :sessionId ORDER BY timestamp DESC")
+    @Update
+    suspend fun update(gamePick: GamePick)
+
+    // LiveData dla UI
+    @Query("SELECT * FROM game_picks WHERE sessionId = :sessionId ORDER BY pickOrder DESC, timestamp DESC")
+    fun getPicksForSession(sessionId: String): LiveData<List<GamePick>>
+
+    // Suspend functions dla logiki biznesowej
+    @Query("SELECT * FROM game_picks WHERE sessionId = :sessionId ORDER BY pickOrder DESC, timestamp DESC")
     suspend fun getAllPicksForSession(sessionId: String): List<GamePick>
+
+    @Query("SELECT * FROM game_picks WHERE sessionId = :sessionId ORDER BY pickOrder DESC, timestamp DESC LIMIT 1")
+    suspend fun getLastPick(sessionId: String): GamePick?
+
+    @Query("SELECT COUNT(*) FROM game_picks WHERE sessionId = :sessionId")
+    suspend fun getPickCount(sessionId: String): Int
+
+    @Query("SELECT COALESCE(MAX(pickOrder), 0) + 1 FROM game_picks WHERE sessionId = :sessionId")
+    suspend fun getNextPickOrder(sessionId: String): Int
+
+    // Dla cofania - pobierz wybory gracza
+    @Query("SELECT * FROM game_picks WHERE sessionId = :sessionId AND playerId = :playerId ORDER BY timestamp DESC")
+    suspend fun getPicksForPlayer(sessionId: String, playerId: Int): List<GamePick>
 }

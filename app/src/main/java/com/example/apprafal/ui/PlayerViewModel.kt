@@ -6,23 +6,24 @@ import com.example.apprafal.data.PlayerRepo
 import kotlinx.coroutines.launch
 import java.util.*
 
-class PlayerViewModel(private val repository: PlayerRepo) : ViewModel() {
+class PlayerViewModel(private val playerRepo: PlayerRepo) : ViewModel() {
 
-    val allPlayers: LiveData<List<Player>> = repository.getAllPlayers()
+    val allPlayers = playerRepo.getAllPlayers()
 
-    fun addPlayer(name: String, queuePosition: Int, canChooseGame: Boolean) {
-        viewModelScope.launch {
-            val player = Player(name = name, queuePosition = queuePosition, canChooseGame = canChooseGame)
-            repository.insert(player)
-        }
+    fun insert(player: Player) = viewModelScope.launch {
+        playerRepo.insert(player)
     }
-    val gameQueue: LiveData<List<Player>> = repository.getQueue()
-
 }
 
-class PlayerViewModelFactory(private val repository: PlayerRepo) : ViewModelProvider.Factory {
+class PlayerViewModelFactory(private val playerRepo: PlayerRepo) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        return PlayerViewModel(repository) as T
+        if (modelClass.isAssignableFrom(PlayerViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return PlayerViewModel(playerRepo) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }
+
+
 

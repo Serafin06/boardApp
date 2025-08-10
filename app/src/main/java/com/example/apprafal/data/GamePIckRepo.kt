@@ -3,53 +3,75 @@ package com.example.apprafal.data
 import androidx.lifecycle.LiveData
 import android.util.Log
 
-class GamePickRepo(private val dao: GamePickDao) {
+class GamePickRepo(private val gamePickDao: GamePickDao) {
 
-    fun getPicksForSession(sessionId: String): LiveData<List<GamePick>> =
-        dao.getPicksForSession(sessionId)
-
-    suspend fun insert(gamePick: GamePick) = dao.insert(gamePick)
-
-    // Nowa funkcja: usuń ostatni wybór i przywróć gracza na początek kolejki
-    suspend fun undoLastPick(sessionId: String, queueRepo: GameQueueRepo): Boolean {
-        Log.d("UNDO_DEBUG", "🔄 Rozpoczęcie cofania ostatniego wyboru...")
-
-        try {
-            // 1. Pobierz ostatni wybór
-            val lastPick = dao.getLastPick(sessionId)
-            if (lastPick == null) {
-                Log.w("UNDO_DEBUG", "⚠️ Brak wyborów do cofnięcia")
-                return false
-            }
-
-            Log.d("UNDO_DEBUG", "🎯 Ostatni wybór: ${lastPick.playerId} -> ${lastPick.gameName}")
-
-            // 2. Usuń wybór z bazy
-            dao.delete(lastPick)
-            Log.d("UNDO_DEBUG", "🗑️ Usunięto wybór z historii")
-
-            // 3. Znajdź gracza w kolejce i przenieś na początek
-            val playerId = lastPick.playerId.toIntOrNull() ?: return false
-            val queue = queueRepo.getActiveQueue(sessionId)
-            val playerEntry = queue.find { it.playerId == playerId }
-
-            if (playerEntry != null) {
-                // Znajdź minimalną pozycję i ustaw gracza przed nią
-                val minPosition = queue.minOfOrNull { it.position } ?: 1
-                val newEntry = playerEntry.copy(position = minPosition - 1)
-
-                queueRepo.updateEntry(newEntry)
-                Log.d("UNDO_DEBUG", "🔄 Gracz ${playerId} przeniesiony na pozycję ${newEntry.position}")
-            }
-
-            Log.d("UNDO_DEBUG", "✅ Cofanie zakończone pomyślnie")
-            return true
-
-        } catch (e: Exception) {
-            Log.e("UNDO_DEBUG", "❌ Błąd podczas cofania: ${e.message}", e)
-            return false
-        }
+    fun getPicksForSession(sessionId: String): LiveData<List<GamePick>> {
+        return gamePickDao.getPicksForSession(sessionId)
     }
 
-    suspend fun getLastPick(sessionId: String): GamePick? = dao.getLastPick(sessionId)
+    suspend fun insert(gamePick: GamePick) {
+        gamePickDao.insert(gamePick)
+    }
+
+    suspend fun insertWithOrder(sessionId: String, playerId: Int, gameName: String): GamePick {
+        val pickOrder = gamePickDao.getNextPickOrder(sessionId)
+        val gamePick = GamePick(
+            sessionId = sessionId,
+            playerId = playerId, // już Int!
+            gameName = gameName,
+            pickOrder = pickOrder
+        )
+        gamePickDao.insert(gamePick)
+        return gamePick
+    }
+
+    suspend fun getLastPick(sessionId: String): GamePick? {
+        return gamePickDao.getLastPick(sessionId)
+    }
+
+    suspend fun getAllPicksForSession(sessionId: String): List<GamePick> {
+        return gamePickDao.getAllPicksForSession(sessionId)
+    }
+
+    suspend fun getPickCount(sessionId: String): Int {
+        return gamePickDao.getPickCount(sessionId)
+    }
+
+    // ZMIENIONA logika cofania - teraz współpracuje z GameSessionRepo
+    suspend fun undoLastPick(
+        sessionId: String,
+        sessionRepo: GameSessionRepo
+    ): Boolean {
+        return try {
+            val lastPick = getLastPick(sessionId) ?: return false
+
+            // 1. Usuń pick
+            gamePickDao.delete(lastPick)
+
+            // 2. Przywróć uczestnika do stanu "nie wybierał"
+            val participantDao = sessionRepo.participantDao // potrzebny dostęp
+            participantDao.markAsHasPicked(
+                sessionId = sessionId,
+                playerId = lastPick.playerId,
+                hasPicked = false,
+                timestamp = null
+            )
+
+            // 3. Przesuń go z powrotem na początek kolejki
+            // (implementacja zależna od wymagań - można zostawić na końcu lub przesunąć)
+
+            // 4. Ustaw go jako current picker
+            sessionRepo.updateCurrentPicker(sessionId, lastPick.playerId)
+
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
 }
+
+// USUŃ CAŁKOWICIE: GameQueueRepo - nie jest już potrzebny
+
+// Extension dla łatwiejszego dostępu w GamePickRepo
+val GameSessionRepo.participantDao: GameSessionParticipantDao
+    get() = this.participantDao // To będzie wymagało refactoringu konstruktora}
