@@ -10,7 +10,6 @@ class GameQueueRepo(private val dao: GameQueueDao) {
 
     suspend fun getQueue(sessionId: String): List<GameQueueEntry> = dao.getQueue(sessionId)
 
-    // Nowa metoda - zwraca tylko aktywnych graczy (nie pominięte)
     suspend fun getActiveQueue(sessionId: String): List<GameQueueEntry> =
         dao.getActiveQueue(sessionId)
 
@@ -25,7 +24,6 @@ class GameQueueRepo(private val dao: GameQueueDao) {
         val maxPos = dao.getMaxPosition(sessionId) ?: 0
         Log.d("QUEUE_DEBUG", "📊 Maksymalna pozycja: $maxPos")
 
-        // ⚠️ KRYTYCZNA POPRAWKA: było =+ teraz jest =
         val newPosition = maxPos + 1
         val updated = entry.copy(position = newPosition)
 

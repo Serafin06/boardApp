@@ -32,7 +32,7 @@ data class GameSession(
 data class GameSessionParticipant(
     @PrimaryKey val id: String = UUID.randomUUID().toString(),
     val sessionId: String,
-    val playerId: String,
+    val playerId: Int,
     val isPresent: Boolean = true,
     val choseGame: Boolean = false,
     val queuePosition: Int,
