@@ -70,7 +70,6 @@ class GamePickRepo(private val gamePickDao: GamePickDao) {
     }
 }
 
-// USUŃ CAŁKOWICIE: GameQueueRepo - nie jest już potrzebny
 
 // Extension dla łatwiejszego dostępu w GamePickRepo
 val GameSessionRepo.participantDao: GameSessionParticipantDao

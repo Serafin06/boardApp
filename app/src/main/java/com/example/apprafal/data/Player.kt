@@ -12,11 +12,4 @@ data class Player(
     val queuePosition: Int? = null
 )
 
-// Główna tabela sesji gier
-@Entity(tableName = "game_sessions")
-data class GameSession(
-    @PrimaryKey val id: String = UUID.randomUUID().toString(),
-    val date: Long, // timestamp
-    val currentPickerId: Int? = null, // kto aktualnie wybiera
-    val isCompleted: Boolean = false
-)
+

@@ -5,12 +5,15 @@ import java.util.UUID
 
 
 
+@Entity(tableName = "game_sessions")
 data class GameSession(
     @PrimaryKey val id: String = UUID.randomUUID().toString(),
-    val date: Long // timestamp
+    val date: Long, // timestamp
+    val currentPickerId: Int? = null, // DODAJ to pole
+    val isCompleted: Boolean = false  // DODAJ to pole
 )
 
-
+// GameSessionParticipant - DODAJ brakujące pola
 @Entity(
     tableName = "session_participants",
     foreignKeys = [
@@ -32,16 +35,18 @@ data class GameSession(
 data class GameSessionParticipant(
     @PrimaryKey val id: String = UUID.randomUUID().toString(),
     val sessionId: String,
-    val playerId: Int, // spójny typ Int
+    val playerId: Int,
     val isPresent: Boolean = true,
+    val canPickInSession: Boolean = true, // DODAJ to pole - czy może wybierać w tej sesji
     val queuePosition: Int,
-    val weight: Float = 1.0f, // waga gracza dla algorytmu wyboru
-    val isSkipped: Boolean = false, // czy został pominięty w tej rundzie
-    val lastPickTimestamp: Long? = null // kiedy ostatnio wybierał
+    val isSkipped: Boolean = false,
+    val hasPickedInSession: Boolean = false, // DODAJ to pole
+    val lastPickTimestamp: Long? = null // DODAJ to pole
 )
 
+// GamePick - ZMIEŃ playerId na Int i DODAJ pickOrder
 @Entity(
-    tableName = "game_picks",
+    tableName = "game_picks", // ZMIEŃ nazwę tabeli dla spójności
     foreignKeys = [
         ForeignKey(
             entity = GameSession::class,
@@ -61,9 +66,30 @@ data class GameSessionParticipant(
 data class GamePick(
     @PrimaryKey val id: String = UUID.randomUUID().toString(),
     val sessionId: String,
-    val playerId: Int, // ZMIENIONE na Int dla spójności
+    val playerId: Int, // ZMIEŃ z String na Int
     val gameName: String,
     val timestamp: Long = System.currentTimeMillis(),
-    val pickOrder: Int // który to był wybór w sesji (1, 2, 3...)
+    val pickOrder: Int // DODAJ to pole
 )
 
+// Data class dla query z joinami
+data class ParticipantWithName(
+    val id: String,
+    val sessionId: String,
+    val playerId: Int,
+    val isPresent: Boolean,
+    val canPickInSession: Boolean,
+    val queuePosition: Int,
+    val isSkipped: Boolean,
+    val hasPickedInSession: Boolean,
+    val lastPickTimestamp: Long?,
+    val playerName: String
+)
+
+// Data class dla UI
+data class GamePickWithPlayerName(
+    val playerName: String,
+    val gameName: String,
+    val timestamp: Long,
+    val originalPick: GamePick
+)

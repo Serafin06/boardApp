@@ -13,6 +13,14 @@ class PlayerViewModel(private val playerRepo: PlayerRepo) : ViewModel() {
     fun insert(player: Player) = viewModelScope.launch {
         playerRepo.insert(player)
     }
+    fun addPlayer(name: String, queuePosition: Int, canChooseGame: Boolean) = viewModelScope.launch {
+        val player = Player(
+            name = name,
+            canChooseGame = canChooseGame,
+            queuePosition = if (queuePosition == -1) null else queuePosition
+        )
+        playerRepo.insert(player)
+    }
 }
 
 class PlayerViewModelFactory(private val playerRepo: PlayerRepo) : ViewModelProvider.Factory {

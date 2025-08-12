@@ -4,6 +4,7 @@ import android.app.AlertDialog
 import android.content.Intent
 import android.os.Bundle
 import android.text.InputType
+import android.util.Log
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
@@ -11,9 +12,12 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 import com.example.apprafal.R
 import com.example.apprafal.data.AppDatabase
 import com.example.apprafal.data.PlayerRepo
+import com.example.apprafal.data.GameSessionRepo
 import com.example.apprafal.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
@@ -26,7 +30,6 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
@@ -37,7 +40,6 @@ class MainActivity : AppCompatActivity() {
         viewModel.allPlayers.observe(this, Observer {
             adapter.submitList(it)
         })
-        val checkboxCanChoose = binding.checkboxCanChoose
 
         binding.buttonAdd.setOnClickListener {
             val name = binding.editTextPlayerName.text.toString()
@@ -75,20 +77,23 @@ class MainActivity : AppCompatActivity() {
         }
 
         val createSessionButton = findViewById<Button>(R.id.createSessionButton)
-
         createSessionButton.setOnClickListener {
             val intent = Intent(this, CreateSessionActivity::class.java)
             startActivity(intent)
         }
+
         val historyButton = findViewById<Button>(R.id.buttonHistory)
         historyButton.setOnClickListener {
+            // Historia też znajdzie najnowszą sesję automatycznie
+            Log.d("MAIN_DEBUG", "🎯 Otwieranie historii gier...")
             startActivity(Intent(this, GameHistoryActivity::class.java))
         }
 
         val queueButton = findViewById<Button>(R.id.queue)
         queueButton.setOnClickListener {
+            // Kolejka znajdzie najnowszą sesję automatycznie
+            Log.d("MAIN_DEBUG", "🎯 Otwieranie kolejki graczy...")
             startActivity(Intent(this, QueueActivity::class.java))
         }
-
     }
 }

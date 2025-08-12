@@ -30,8 +30,52 @@ class GameHistoryActivity : AppCompatActivity() {
         sessionId = intent.getStringExtra("sessionId")
         Log.d("HISTORY_DEBUG", "🏁 GameHistoryActivity started with sessionId: $sessionId")
 
+        if (sessionId != null) {
+            // Mamy konkretne sessionId - użyj go
+            Log.d("HISTORY_DEBUG", "✅ Używam przekazanego sessionId: $sessionId")
+            setupHistoryView()
+        } else {
+            // Brak sessionId - znajdź najnowszą sesję automatycznie
+            Log.d("HISTORY_DEBUG", "⚠️ Brak sessionId, szukam najnowszej sesji...")
+            findLatestSession()
+        }
+    }
+
+    private fun findLatestSession() {
+        lifecycleScope.launch {
+            try {
+                val database = AppDatabase.getDatabase(this@GameHistoryActivity)
+                val sessionDao = database.gameSessionDao()
+                val participantDao = database.gameSessionParticipantDao()
+                val sessionRepo = GameSessionRepo(sessionDao, participantDao)
+
+                val latestSession = sessionRepo.getLatestSession()
+
+                if (latestSession != null) {
+                    sessionId = latestSession.id
+                    Log.d("HISTORY_DEBUG", "✅ Znaleziono najnowszą sesję: $sessionId")
+                    runOnUiThread {
+                        setupHistoryView()
+                    }
+                } else {
+                    Log.e("HISTORY_DEBUG", "❌ Brak sesji w bazie!")
+                    runOnUiThread {
+                        Toast.makeText(this@GameHistoryActivity, "Brak sesji do wyświetlenia", Toast.LENGTH_SHORT).show()
+                        finish()
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("HISTORY_DEBUG", "❌ Błąd podczas szukania sesji: ${e.message}", e)
+                runOnUiThread {
+                    Toast.makeText(this@GameHistoryActivity, "Błąd: ${e.message}", Toast.LENGTH_SHORT).show()
+                    finish()
+                }
+            }
+        }
+    }
+
+    private fun setupHistoryView() {
         if (sessionId == null) {
-            Log.e("HISTORY_DEBUG", "❌ Brak sessionId!")
             finish()
             return
         }
@@ -62,15 +106,22 @@ class GameHistoryActivity : AppCompatActivity() {
 
         Log.d("HISTORY_DEBUG", "🔍 Ładowanie danych dla sesji: $sessionId")
 
-        // Obserwacja wyborów gier z automatycznym mapowaniem na imiona
-        pickRepo.getPicksForSession(sessionId!!).observe(this) { picks ->
-            Log.d("HISTORY_DEBUG", "📋 Otrzymano ${picks.size} wyborów gier")
+        // Obserwacja wyborów gier z automatycznym mapowaniem na imiona (OSTATNIE 5)
+        pickRepo.getPicksForSession(sessionId!!).observe(this) { allPicks ->
+            Log.d("HISTORY_DEBUG", "📋 Otrzymano ${allPicks.size} wyborów gier")
 
             lifecycleScope.launch {
-                val picksWithNames = picks.map { pick ->
+                // Weź tylko ostatnie 5 wyborów (sortuj po pickOrder malejąco i weź pierwsze 5)
+                val last5Picks = allPicks
+                    .sortedByDescending { it.pickOrder }
+                    .take(5)
+
+                Log.d("HISTORY_DEBUG", "🎯 Pokazuję ostatnie ${last5Picks.size} wyborów")
+
+                val picksWithNames = last5Picks.map { pick ->
                     Log.d("HISTORY_DEBUG", "🔍 Mapowanie playerId ${pick.playerId}")
 
-                    val player = playerRepo.getById(pick.playerId) // już Int!
+                    val player = playerRepo.getById(pick.playerId)
                     Log.d("HISTORY_DEBUG", "👤 Znaleziony gracz: ${player.name}")
 
                     GamePickWithPlayerName(
