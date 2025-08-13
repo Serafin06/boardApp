@@ -48,17 +48,6 @@ class GamePickRepo(private val gamePickDao: GamePickDao) {
             // 1. Usuń pick
             gamePickDao.delete(lastPick)
 
-            // 2. Przywróć uczestnika do stanu "nie wybierał"
-            val participantDao = sessionRepo.participantDao // potrzebny dostęp
-            participantDao.markAsHasPicked(
-                sessionId = sessionId,
-                playerId = lastPick.playerId,
-                hasPicked = false,
-                timestamp = null
-            )
-
-            // 3. Przesuń go z powrotem na początek kolejki
-            // (implementacja zależna od wymagań - można zostawić na końcu lub przesunąć)
 
             // 4. Ustaw go jako current picker
             sessionRepo.updateCurrentPicker(sessionId, lastPick.playerId)

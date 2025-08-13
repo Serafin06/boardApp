@@ -27,7 +27,6 @@ interface GameSessionParticipantDao {
         WHERE sessionId = :sessionId 
         AND isPresent = 1 
         AND canPickInSession = 1 
-        AND isSkipped = 0
         ORDER BY queuePosition ASC
     """)
     suspend fun getActiveQueue(sessionId: String): List<GameSessionParticipant>
@@ -37,7 +36,6 @@ interface GameSessionParticipantDao {
         WHERE sessionId = :sessionId 
         AND isPresent = 1 
         AND canPickInSession = 1 
-        AND isSkipped = 0
         ORDER BY queuePosition ASC 
         LIMIT 1
     """)
@@ -52,16 +50,6 @@ interface GameSessionParticipantDao {
 
     @Query("UPDATE session_participants SET queuePosition = :newPosition WHERE id = :participantId")
     suspend fun updateQueuePosition(participantId: String, newPosition: Int)
-
-    @Query("UPDATE session_participants SET isSkipped = :skipped WHERE sessionId = :sessionId AND playerId = :playerId")
-    suspend fun setSkipped(sessionId: String, playerId: Int, skipped: Boolean)
-
-    @Query("""
-        UPDATE session_participants 
-        SET hasPickedInSession = :hasPicked, lastPickTimestamp = :timestamp 
-        WHERE sessionId = :sessionId AND playerId = :playerId
-    """)
-    suspend fun markAsHasPicked(sessionId: String, playerId: Int, hasPicked: Boolean, timestamp: Long?)
 
     // PRZESUWANIE W KOLEJCE
     @Transaction

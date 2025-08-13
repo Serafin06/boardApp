@@ -32,11 +32,6 @@ interface GameSessionDao {
     @Query("UPDATE game_sessions SET currentPickerId = :playerId WHERE id = :sessionId")
     suspend fun updateCurrentPicker(sessionId: String, playerId: Int?)
 
-
-    @Query("UPDATE game_sessions SET isCompleted = :completed WHERE id = :sessionId")
-    suspend fun markSessionCompleted(sessionId: String, completed: Boolean)
-
-
     @Query("SELECT * FROM game_sessions ORDER BY date DESC LIMIT 1")
     suspend fun getLatestSession(): GameSession?
 }

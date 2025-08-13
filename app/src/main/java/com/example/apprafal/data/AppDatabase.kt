@@ -11,7 +11,7 @@ import androidx.room.*
         GamePick::class
 
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 

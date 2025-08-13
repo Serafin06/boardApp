@@ -78,8 +78,6 @@ data class ParticipantWithName(
     val isPresent: Boolean,
     val canPickInSession: Boolean,
     val queuePosition: Int,
-    val isSkipped: Boolean,
-    val hasPickedInSession: Boolean,
     val lastPickTimestamp: Long?,
     val playerName: String
 )

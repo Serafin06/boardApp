@@ -1,6 +1,6 @@
 package com.example.apprafal.data
 
-import androidx.lifecycle.LiveData
+
 import android.util.Log
 
 
@@ -136,18 +136,7 @@ class GameSessionRepo(
         Log.d("SESSION_REPO", "  - Participant ID: ${participant.id}")
 
         try {
-            // 1. Oznacz że gracz już wybierał w tej sesji
-            Log.d("SESSION_REPO", "📝 KROK 1: Oznaczam gracza jako 'już wybierał'...")
-            participantDao.markAsHasPicked(
-                sessionId = sessionId,
-                playerId = participant.playerId,
-                hasPicked = true,
-                timestamp = System.currentTimeMillis()
-            )
-            Log.d("SESSION_REPO", "✅ KROK 1 zakończony - gracz oznaczony")
 
-            // 2. Przesuń gracza na koniec kolejki
-            Log.d("SESSION_REPO", "🔄 KROK 2: Przesuwam gracza na koniec kolejki...")
 
             participantDao.moveToEndOfQueue(sessionId, participant.id)
 
@@ -185,10 +174,7 @@ class GameSessionRepo(
     suspend fun skipParticipant(sessionId: String, playerId: Int) {
         Log.d("SESSION_REPO", "⏭️ Pomijanie gracza $playerId...")
 
-        participantDao.setSkipped(sessionId, playerId, true)
-        Log.d("SESSION_REPO", "✅ Gracz pominięty")
-
-        // Znajdź następnego gracza
+       // Znajdź następnego gracza
         val nextPicker = getFirstAvailablePicker(sessionId)
         updateCurrentPicker(sessionId, nextPicker?.playerId)
 
@@ -196,15 +182,6 @@ class GameSessionRepo(
             Log.d("SESSION_REPO", "✅ Następny picker po pominięciu: ${nextPicker.playerId}")
         }
     }
-
-
-    suspend fun resetParticipantSkip(sessionId: String, playerId: Int) {
-        Log.d("SESSION_REPO", "🔄 Przywracanie gracza $playerId do kolejki...")
-        participantDao.setSkipped(sessionId, playerId, false)
-        Log.d("SESSION_REPO", "✅ Gracz przywrócony do kolejki")
-    }
-
-
     suspend fun getParticipantsWithNames(sessionId: String): List<ParticipantWithName> {
         Log.d("SESSION_REPO", "📋 Pobieranie uczestników z nazwami...")
         val participants = participantDao.getParticipantsWithNames(sessionId)
