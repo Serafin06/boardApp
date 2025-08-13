@@ -14,22 +14,6 @@ class GameSessionViewModel(
     private val playerRepo: PlayerRepo
 ) : ViewModel() {
 
-    /**
-     * Tworzy prostą sesję z samą datą (bez uczestników)
-     * @param date - timestamp kiedy sesja została utworzona
-     * @return ID utworzonej sesji
-     */
-    suspend fun createSession(date: Long): String {
-        Log.d("SESSION_VM", "🎯 Tworzenie prostej sesji z datą: $date")
-        return sessionRepo.createSession(date)
-    }
-
-    /**
-     * Tworzy sesję wraz z uczestnikami - główna metoda używana w CreateSessionActivity
-     * @param date - timestamp sesji
-     * @param selectedPlayers - lista graczy wybranych do sesji
-     * @return ID utworzonej sesji
-     */
     suspend fun createSessionAndReturnId(date: Long, selectedPlayers: List<Player>): String {
         Log.d("SESSION_VM", "🎯 Tworzenie sesji z ${selectedPlayers.size} graczami")
         Log.d("SESSION_VM", "📋 Gracze: ${selectedPlayers.map { "${it.name} (canChoose: ${it.canChooseGame}, queuePos: ${it.queuePosition})" }}")

@@ -29,15 +29,11 @@ abstract class AppDatabase : RoomDatabase() {
 
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
-                val instance = Room.databaseBuilder(
+                Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
-                    "app_database"
-                )
-                    .fallbackToDestructiveMigration() // Usuwa starą bazę i tworzy nową
-                    .build()
-                INSTANCE = instance
-                instance
+                    "board_app_db"
+                ).build().also { INSTANCE = it }
             }
         }
     }

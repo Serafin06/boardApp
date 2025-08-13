@@ -21,6 +21,7 @@ class PlayerViewModel(private val playerRepo: PlayerRepo) : ViewModel() {
         )
         playerRepo.insert(player)
     }
+    val gameQueue: LiveData<List<Player>> = playerRepo.getQueue()
 }
 
 class PlayerViewModelFactory(private val playerRepo: PlayerRepo) : ViewModelProvider.Factory {

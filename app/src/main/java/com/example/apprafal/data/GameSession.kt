@@ -9,11 +9,11 @@ import java.util.UUID
 data class GameSession(
     @PrimaryKey val id: String = UUID.randomUUID().toString(),
     val date: Long, // timestamp
-    val currentPickerId: Int? = null, // DODAJ to pole
-    val isCompleted: Boolean = false  // DODAJ to pole
-)
+    val currentPickerId: Int? = null,
+    val gameName: String? = null,
+    )
 
-// GameSessionParticipant - DODAJ brakujące pola
+
 @Entity(
     tableName = "session_participants",
     foreignKeys = [
@@ -32,21 +32,18 @@ data class GameSession(
     ],
     indices = [Index("sessionId"), Index("playerId"), Index("queuePosition")]
 )
+
 data class GameSessionParticipant(
     @PrimaryKey val id: String = UUID.randomUUID().toString(),
     val sessionId: String,
     val playerId: Int,
     val isPresent: Boolean = true,
-    val canPickInSession: Boolean = true, // DODAJ to pole - czy może wybierać w tej sesji
+    val canPickInSession: Boolean = true,
     val queuePosition: Int,
-    val isSkipped: Boolean = false,
-    val hasPickedInSession: Boolean = false, // DODAJ to pole
-    val lastPickTimestamp: Long? = null // DODAJ to pole
-)
+    )
 
-// GamePick - ZMIEŃ playerId na Int i DODAJ pickOrder
 @Entity(
-    tableName = "game_picks", // ZMIEŃ nazwę tabeli dla spójności
+    tableName = "game_picks",
     foreignKeys = [
         ForeignKey(
             entity = GameSession::class,
@@ -69,7 +66,8 @@ data class GamePick(
     val playerId: Int, // ZMIEŃ z String na Int
     val gameName: String,
     val timestamp: Long = System.currentTimeMillis(),
-    val pickOrder: Int // DODAJ to pole
+    val pickOrder: Int,
+
 )
 
 // Data class dla query z joinami
