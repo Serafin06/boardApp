@@ -2,6 +2,7 @@ package com.example.apprafal.data
 
 
 import android.util.Log
+import android.widget.Toast
 
 
 class GameSessionRepo(
@@ -72,20 +73,17 @@ class GameSessionRepo(
     }
 
     suspend fun getActiveQueue(sessionId: String): List<GameSessionParticipant> {
-        Log.d("SESSION_REPO", "🎯 Pobieranie aktywnej kolejki dla sesji: $sessionId")
 
         // Pobierz wszystkich uczestników sesji
         val allParticipants = participantDao.getParticipantsForSession(sessionId)
-        Log.d("SESSION_REPO", "📋 Wszyscy uczestnicy: ${allParticipants.size}")
 
         // Filtruj tylko tych którzy mogą wybierać
         val activeParticipants = allParticipants.filter { it.canPickInSession }
-        Log.d("SESSION_REPO", "🎯 Aktywni uczestnicy: ${activeParticipants.size}")
 
         // Posortuj po pozycji w kolejce (najniższa waga pierwsza)
         val sortedQueue = activeParticipants.sortedBy { it.queuePosition }
 
-        Log.d("SESSION_REPO", "✅ Aktywna kolejka (posortowana):")
+
         sortedQueue.forEach { p ->
             Log.d("SESSION_REPO", "  - PlayerID: ${p.playerId}, pozycja: ${p.queuePosition}")
         }
@@ -97,26 +95,9 @@ class GameSessionRepo(
     suspend fun getFirstAvailablePicker(sessionId: String): GameSessionParticipant? {
         Log.d("SESSION_REPO", "🎯 Szukam pierwszego dostępnego gracza do wybierania...")
 
-        // Pobierz aktywną kolejkę
         val activeQueue = getActiveQueue(sessionId)
 
-        // Znajdź pierwszego gracza który:
-        // 1. Może wybierać (canPickInSession = true) - już przefiltrowane w getActiveQueue
-        // 2. Nie jest pominięty (isSkipped = false)
-        // 3. Ma najniższą wagę (queuePosition)
-        val availablePicker = activeQueue
-            .filter { !it.isPresent }  // Usuń pominiętych
-            .minByOrNull { it.queuePosition }  // Znajdź z najniższą wagą
-
-        if (availablePicker != null) {
-            Log.d("SESSION_REPO", "✅ Znaleziono pierwszego dostępnego gracza:")
-            Log.d("SESSION_REPO", "  - PlayerID: ${availablePicker.playerId}")
-            Log.d("SESSION_REPO", "  - Pozycja w kolejce: ${availablePicker.queuePosition}")
-            Log.d("SESSION_REPO", "  - Może wybierać: ${availablePicker.canPickInSession}")
-            Log.d("SESSION_REPO", "  - Pominięty: ${availablePicker.isPresent}")
-        } else {
-            Log.d("SESSION_REPO", "❌ Brak dostępnych graczy do wybierania!")
-        }
+        val availablePicker = activeQueue.firstOrNull()
 
         return availablePicker
     }

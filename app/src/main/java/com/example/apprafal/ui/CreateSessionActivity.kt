@@ -24,7 +24,6 @@ import kotlinx.coroutines.launch
 import kotlin.collections.map
 
 
-
 class CreateSessionActivity : AppCompatActivity() {
 
     private lateinit var sessionViewModel: GameSessionViewModel
@@ -55,10 +54,12 @@ class CreateSessionActivity : AppCompatActivity() {
 
         // ViewModels
         val sessionFactory = GameSessionViewModelFactory(sessionRepo, playerRepository)
-        sessionViewModel = ViewModelProvider(this, sessionFactory).get(GameSessionViewModel::class.java)
+        sessionViewModel =
+            ViewModelProvider(this, sessionFactory).get(GameSessionViewModel::class.java)
 
         val detailFactory = SessionDetailViewModelFactory(sessionRepo, pickRepo)
-        sessionDetailViewModel = ViewModelProvider(this, detailFactory).get(SessionDetailViewModel::class.java)
+        sessionDetailViewModel =
+            ViewModelProvider(this, detailFactory).get(SessionDetailViewModel::class.java)
 
         // RecyclerView setup
         playerAdapter = PlayerSelectAdapter()
@@ -83,100 +84,123 @@ class CreateSessionActivity : AppCompatActivity() {
             }
 
             Log.d("DEBUG_SESSION", "=== ROZPOCZĘCIE TWORZENIA SESJI ===")
-            Log.d("DEBUG_SESSION", "Wybrani gracze: ${selectedPlayers.map { "${it.name} (canChoose: ${it.canChooseGame})" }}")
+            Log.d(
+                "DEBUG_SESSION",
+                "Wybrani gracze: ${selectedPlayers.map { "${it.name} (canChoose: ${it.canChooseGame})" }}"
+            )
 
             lifecycleScope.launch {
                 try {
                     // 1. Tworzenie sesji z uczestnikami
-                    val sessionId = sessionViewModel.createSessionAndReturnId(timestamp, selectedPlayers)
+                    val sessionId =
+                        sessionViewModel.createSessionAndReturnId(timestamp, selectedPlayers)
                     Log.d("DEBUG_SESSION", "✅ Utworzono sesję: $sessionId")
 
                     // 2. Sprawdzenie kolejki
                     val activeQueue = sessionViewModel.getActiveQueue(sessionId)
-                    Log.d("DEBUG_SESSION", "🟢 Aktywna kolejka: ${activeQueue.map { "ID:${it.playerId}, pos:${it.queuePosition}, canPick:${it.canPickInSession}" }}")
+                    Log.d(
+                        "DEBUG_SESSION",
+                        "🟢 Aktywna kolejka: ${activeQueue.map { "ID:${it.playerId}, pos:${it.queuePosition}, canPick:${it.canPickInSession}" }}"
+                    )
 
                     // 3. Pobranie pierwszego dostępnego gracza
                     val picker = sessionViewModel.getFirstAvailablePicker(sessionId)
+                    if (picker == null) {
+                        Toast.makeText(
+                            this@CreateSessionActivity,
+                            "Brak graczy do wybierania",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        return@launch
+                    }
+
                     Log.d("DEBUG_SESSION", "👤 Pierwszy dostępny picker: $picker")
 
-                    if (picker != null) {
-                        val player = playerRepository.getById(picker.playerId)
-                        Log.d("DEBUG_SESSION", "🎯 Gracz który wybiera: ${player.name}")
+                    val player = playerRepository.getById(picker.playerId)
+                    Log.d("DEBUG_SESSION", "🎯 Gracz który wybiera: ${player.name}")
 
-                        runOnUiThread {
-                            val dialog = AlertDialog.Builder(this@CreateSessionActivity)
-                                .setTitle("${player.name} wybiera grę")
-                                .setMessage("Ciekawe co wybierze")
-                                .setPositiveButton("OK") { _, _ ->
-                                    Log.d("DEBUG_SESSION", "=== UŻYTKOWNIK NACISNĄŁ OK ===")
+                    runOnUiThread {
+                        val dialog = AlertDialog.Builder(this@CreateSessionActivity)
+                            .setTitle("${player.name} wybiera grę")
+                            .setMessage("Ciekawe co wybierze")
+                            .setPositiveButton("OK") { _, _ ->
+                                Log.d("DEBUG_SESSION", "=== UŻYTKOWNIK NACISNĄŁ OK ===")
 
-                                    lifecycleScope.launch {
-                                        try {
-                                            // KROK 1: Zapisz wybór gry i automatycznie przesuń gracza
-                                            Log.d("DEBUG_SESSION", "📝 Zapisywanie wyboru i przesuwanie gracza...")
+                                lifecycleScope.launch {
+                                    try {
+                                        // KROK 1: Zapisz wybór gry i automatycznie przesuń gracza
+                                        Log.d(
+                                            "DEBUG_SESSION",
+                                            "📝 Zapisywanie wyboru i przesuwanie gracza..."
+                                        )
 
-                                            val success = sessionDetailViewModel.makeGamePick(
-                                                sessionId = sessionId,
-                                                playerId = picker.playerId,
-                                                gameName = "Kotlin"
+                                        val success = sessionDetailViewModel.makeGamePick(
+                                            sessionId = sessionId,
+                                            playerId = picker.playerId,
+                                            gameName = "Kotlin"
+                                        )
+
+                                        if (success) {
+                                            Log.d(
+                                                "DEBUG_SESSION",
+                                                "✅ Wybór zapisany i gracz przesunięty"
                                             )
 
-                                            if (success) {
-                                                Log.d("DEBUG_SESSION", "✅ Wybór zapisany i gracz przesunięty")
+                                            // Sprawdź nowy stan kolejki
+                                            val newQueue =
+                                                sessionViewModel.getActiveQueue(sessionId)
+                                            Log.d(
+                                                "DEBUG_SESSION",
+                                                "📋 Nowa kolejka: ${newQueue.map { "ID:${it.playerId}, pos:${it.queuePosition}" }}"
+                                            )
 
-                                                // Sprawdź nowy stan kolejki
-                                                val newQueue = sessionViewModel.getActiveQueue(sessionId)
-                                                Log.d("DEBUG_SESSION", "📋 Nowa kolejka: ${newQueue.map { "ID:${it.playerId}, pos:${it.queuePosition}" }}")
-
-                                                // KROK 2: Przejście do historii
-                                                Log.d("DEBUG_SESSION", "✅ Przechodzę do historii...")
-                                                runOnUiThread {
-                                                    val intent = Intent(
-                                                        this@CreateSessionActivity,
-                                                        GameHistoryActivity::class.java
-                                                    )
-                                                    intent.putExtra("sessionId", sessionId)
-                                                    startActivity(intent)
-                                                    finish()
-                                                }
-                                            } else {
-                                                Log.e("DEBUG_SESSION", "❌ Błąd podczas zapisywania wyboru")
-                                                runOnUiThread {
-                                                    Toast.makeText(
-                                                        this@CreateSessionActivity,
-                                                        "Błąd podczas zapisywania wyboru",
-                                                        Toast.LENGTH_LONG
-                                                    ).show()
-                                                }
+                                            // KROK 2: Przejście do historii
+                                            Log.d("DEBUG_SESSION", "✅ Przechodzę do historii...")
+                                            runOnUiThread {
+                                                val intent = Intent(
+                                                    this@CreateSessionActivity,
+                                                    GameHistoryActivity::class.java
+                                                )
+                                                intent.putExtra("sessionId", sessionId)
+                                                startActivity(intent)
+                                                finish()
                                             }
-
-                                        } catch (e: Exception) {
-                                            Log.e("DEBUG_SESSION", "❌ Błąd w operacjach: ${e.message}", e)
+                                        } else {
+                                            Log.e(
+                                                "DEBUG_SESSION",
+                                                "❌ Błąd podczas zapisywania wyboru"
+                                            )
                                             runOnUiThread {
                                                 Toast.makeText(
                                                     this@CreateSessionActivity,
-                                                    "Błąd: ${e.message}",
+                                                    "Błąd podczas zapisywania wyboru",
                                                     Toast.LENGTH_LONG
                                                 ).show()
                                             }
                                         }
+
+                                    } catch (e: Exception) {
+                                        Log.e(
+                                            "DEBUG_SESSION",
+                                            "❌ Błąd w operacjach: ${e.message}",
+                                            e
+                                        )
+                                        runOnUiThread {
+                                            Toast.makeText(
+                                                this@CreateSessionActivity,
+                                                "Błąd: ${e.message}",
+                                                Toast.LENGTH_LONG
+                                            ).show()
+                                        }
                                     }
                                 }
-                                .setCancelable(false)
-                                .create()
+                            }
+                            .setCancelable(false)
+                            .create()
 
-                            dialog.show()
-                        }
-                    } else {
-                        Log.e("DEBUG_SESSION", "❌ Brak dostępnych graczy w kolejce!")
-                        runOnUiThread {
-                            Toast.makeText(
-                                this@CreateSessionActivity,
-                                "Błąd: brak graczy uprawnionych do wybierania!",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
+                        dialog.show()
                     }
+
                 } catch (e: Exception) {
                     Log.e("DEBUG_SESSION", "❌ Błąd tworzenia sesji: ${e.message}", e)
                     runOnUiThread {

@@ -21,45 +21,20 @@ class GameSessionViewModel(
         return sessionRepo.createSessionWithParticipants(date, selectedPlayers)
     }
 
-    /**
-     * Pobiera wszystkie sesje z bazy danych
-     */
     suspend fun getAllSessions(): List<GameSession> {
         Log.d("SESSION_VM", "📋 Pobieranie wszystkich sesji")
         return sessionRepo.getAllSessions()
     }
 
-    // ========== METODY KOLEJKI ==========
-    // Te metody zarządzają kolejką graczy w sesji
-
-    /**
-     * Pobiera aktualną kolejkę graczy dla danej sesji
-     * Zwraca tylko graczy którzy mogą wybierać (canPickInSession = true)
-     * @param sessionId - ID sesji
-     * @return Lista uczestników posortowana po pozycji w kolejce (najniższa waga pierwsza)
-     */
     suspend fun getActiveQueue(sessionId: String): List<GameSessionParticipant> {
-        Log.d("SESSION_VM", "🎯 Pobieranie aktywnej kolejki dla sesji: $sessionId")
+
         val queue = sessionRepo.getActiveQueue(sessionId)
-        Log.d("SESSION_VM", "📋 Znaleziono ${queue.size} aktywnych graczy w kolejce")
         return queue
     }
 
-    /**
-     * KLUCZOWA METODA: Znajduje gracza który powinien teraz wybierać grę
-     * Wybiera gracza z NAJNIŻSZĄ wagą (queuePosition) spośród dostępnych
-     * @param sessionId - ID sesji
-     * @return Gracz z najniższą wagą lub null jeśli nikt nie może wybierać
-     */
     suspend fun getFirstAvailablePicker(sessionId: String): GameSessionParticipant? {
-        Log.d("SESSION_VM", "🎯 Szukam pierwszego dostępnego gracza do wybierania w sesji: $sessionId")
-        val picker = sessionRepo.getFirstAvailablePicker(sessionId)
 
-        if (picker != null) {
-            Log.d("SESSION_VM", "✅ Znaleziono gracza: ID=${picker.playerId}, pozycja=${picker.queuePosition}")
-        } else {
-            Log.d("SESSION_VM", "❌ Brak dostępnych graczy do wybierania!")
-        }
+        val picker = sessionRepo.getFirstAvailablePicker(sessionId)
 
         return picker
     }
