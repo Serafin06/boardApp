@@ -1,10 +1,10 @@
 package com.example.apprafal.ui
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.apprafal.data.*
 import kotlin.collections.find
-
 
 
 class SessionDetailViewModel(
@@ -25,8 +25,16 @@ class SessionDetailViewModel(
         )
     }
 
-    suspend fun updateCurrentPicker(playerId: Int, queuePosition: Int) {
-        playerRepo.updateQueuePosition(playerId, queuePosition)
+    suspend fun changeQueue(playerId: Int) {
+            // Pobierz wszystkich graczy posortowanych według kolejki
+            val allPlayers = playerRepo.getAllQueue()
+
+            // Znajdź maksymalną pozycję w kolejce
+            val maxPosition = allPlayers.mapNotNull { it.queuePosition }.maxOrNull() ?: 0
+
+            // Ustaw gracza na końcu kolejki
+            playerRepo.updatePlayerQueuePosition(playerId, maxPosition + 1)
+
     }
 
     suspend fun makeGamePick(sessionId: String, playerId: Int, gameName: String): Boolean {
@@ -55,12 +63,13 @@ class SessionDetailViewModel(
 
 class SessionDetailViewModelFactory(
     private val sessionRepo: GameSessionRepo,
-    private val gamePickRepo: GamePickRepo
+    private val gamePickRepo: GamePickRepo,
+    private val playerRepo: PlayerRepo
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(SessionDetailViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return SessionDetailViewModel(sessionRepo, gamePickRepo) as T
+            return SessionDetailViewModel(sessionRepo, gamePickRepo, playerRepo) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

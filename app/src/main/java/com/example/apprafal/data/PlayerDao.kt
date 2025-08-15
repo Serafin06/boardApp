@@ -17,12 +17,13 @@ interface PlayerDao {
     @Query("SELECT * FROM players WHERE id = :id")
     suspend fun getById(id: Int): Player
 
-    @Transaction
-    suspend fun updateQueuePosition(playerId: Int, newPosition: Int) {
-        val player = getById(playerId)
-        player.queuePosition = newPosition
-        insert(player)
-    }
+    @Update
+    suspend fun updatePlayer(player: Player)
 
+    @Query("SELECT * FROM players WHERE id = :playerId")
+    suspend fun getPlayerById(playerId: Int): Player?
+
+    @Query("SELECT * FROM players ORDER BY queuePosition ASC")
+    suspend fun getAllQueue(): List<Player>
 
 }

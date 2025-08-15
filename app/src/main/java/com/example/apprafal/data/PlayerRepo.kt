@@ -10,8 +10,15 @@ class PlayerRepo (private val dao: PlayerDao) {
 
     fun getQueue(): LiveData<List<Player>> = dao.getQueue()
 
-    suspend fun updateQueuePosition(playerId: Int, newPosition: Int) {
-        dao.updateQueuePosition(playerId, newPosition)
+    suspend fun updatePlayerQueuePosition(playerId: Int, newPosition: Int) {
+        val player = dao.getPlayerById(playerId)
+        if (player != null) {
+            val updatedPlayer = player.copy(queuePosition = newPosition)
+            dao.updatePlayer(updatedPlayer)
+        }
     }
+    suspend fun getPlayerById(playerId: Int): Player? = dao.getPlayerById(playerId)
+
+    suspend fun getAllQueue(): List<Player> = dao.getAllQueue()
 
 }

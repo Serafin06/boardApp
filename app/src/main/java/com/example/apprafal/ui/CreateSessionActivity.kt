@@ -57,7 +57,7 @@ class CreateSessionActivity : AppCompatActivity() {
         sessionViewModel =
             ViewModelProvider(this, sessionFactory).get(GameSessionViewModel::class.java)
 
-        val detailFactory = SessionDetailViewModelFactory(sessionRepo, pickRepo)
+        val detailFactory = SessionDetailViewModelFactory(sessionRepo, pickRepo, playerRepository)
         sessionDetailViewModel =
             ViewModelProvider(this, detailFactory).get(SessionDetailViewModel::class.java)
 
@@ -139,7 +139,8 @@ class CreateSessionActivity : AppCompatActivity() {
                                             playerId = picker.playerId,
                                             gameName = "Kotlin"
                                         )
-                                        updateQueuePosition(sessionId, picker.playerId)
+
+                                        sessionDetailViewModel.changeQueue(picker.playerId)
 
 
                                         if (success) {

@@ -101,7 +101,7 @@ class GameHistoryActivity : AppCompatActivity() {
         val playerDao = database.playerDao()
         val playerRepo = PlayerRepo(playerDao)
 
-        val factory = SessionDetailViewModelFactory(sessionRepo, pickRepo)
+        val factory = SessionDetailViewModelFactory(sessionRepo, pickRepo, playerRepo)
         sessionDetailViewModel = ViewModelProvider(this, factory).get(SessionDetailViewModel::class.java)
 
         Log.d("HISTORY_DEBUG", "🔍 Ładowanie danych dla sesji: $sessionId")
