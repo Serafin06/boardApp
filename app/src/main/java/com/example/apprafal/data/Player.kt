@@ -9,7 +9,7 @@ data class Player(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val name: String,
     val canChooseGame: Boolean = false,
-    val queuePosition: Int? = null
+    var queuePosition: Int? = null
 )
 
 

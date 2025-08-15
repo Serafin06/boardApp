@@ -22,12 +22,11 @@ class GameSessionRepo(
             Log.d("SESSION_REPO", "👤 Dodaję gracza: ${player.name} (canChoose: ${player.canChooseGame}, originalPos: ${player.queuePosition})")
 
             GameSessionParticipant(
-                sessionId = session.id,                    // Powiąż z sesją
-                playerId = player.id,                      // ID gracza
-                isPresent = true,                          // Domyślnie obecny
-                canPickInSession = player.canChooseGame,   // Czy może wybierać - KLUCZOWE!
+                sessionId = session.id,
+                playerId = player.id,
+                isPresent = true,
+                canPickInSession = player.canChooseGame,
                 queuePosition = player.queuePosition ?: (index + 1),
-
 
             )
         }

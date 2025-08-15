@@ -5,10 +5,7 @@ import androidx.lifecycle.ViewModelProvider
 import com.example.apprafal.data.*
 import android.util.Log
 
-/**
- * ViewModel odpowiedzialny za zarządzanie sesjami gier i kolejkami graczy
- * Pośredniczy między UI a warstwą danych (Repository)
- */
+
 class GameSessionViewModel(
     private val sessionRepo: GameSessionRepo,
     private val playerRepo: PlayerRepo

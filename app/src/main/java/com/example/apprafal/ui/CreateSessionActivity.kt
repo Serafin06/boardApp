@@ -139,6 +139,8 @@ class CreateSessionActivity : AppCompatActivity() {
                                             playerId = picker.playerId,
                                             gameName = "Kotlin"
                                         )
+                                        updateQueuePosition(sessionId, picker.playerId)
+
 
                                         if (success) {
                                             Log.d(

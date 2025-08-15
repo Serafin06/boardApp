@@ -9,7 +9,8 @@ import kotlin.collections.find
 
 class SessionDetailViewModel(
     private val sessionRepo: GameSessionRepo,
-    private val gamePickRepo: GamePickRepo
+    private val gamePickRepo: GamePickRepo,
+    private val playerRepo: PlayerRepo
 ) : ViewModel() {
 
     suspend fun getSessionWithDetails(sessionId: String): SessionDetail? {
@@ -22,6 +23,10 @@ class SessionDetailViewModel(
             participants = participants,
             picks = picks
         )
+    }
+
+    suspend fun updateCurrentPicker(playerId: Int, queuePosition: Int) {
+        playerRepo.updateQueuePosition(playerId, queuePosition)
     }
 
     suspend fun makeGamePick(sessionId: String, playerId: Int, gameName: String): Boolean {

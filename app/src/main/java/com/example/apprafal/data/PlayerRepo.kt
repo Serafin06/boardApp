@@ -10,5 +10,8 @@ class PlayerRepo (private val dao: PlayerDao) {
 
     fun getQueue(): LiveData<List<Player>> = dao.getQueue()
 
+    suspend fun updateQueuePosition(playerId: Int, newPosition: Int) {
+        dao.updateQueuePosition(playerId, newPosition)
+    }
 
 }
