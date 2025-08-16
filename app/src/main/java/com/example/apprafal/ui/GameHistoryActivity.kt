@@ -20,7 +20,7 @@ import kotlinx.coroutines.launch
 class GameHistoryActivity : AppCompatActivity() {
 
     private lateinit var adapter: GamePickListAdapter
-    private lateinit var sessionDetailViewModel: SessionDetailViewModel
+    private lateinit var sessionViewModel: GameSessionViewModel
     private var sessionId: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -101,8 +101,8 @@ class GameHistoryActivity : AppCompatActivity() {
         val playerDao = database.playerDao()
         val playerRepo = PlayerRepo(playerDao)
 
-        val factory = SessionDetailViewModelFactory(sessionRepo, pickRepo, playerRepo)
-        sessionDetailViewModel = ViewModelProvider(this, factory).get(SessionDetailViewModel::class.java)
+        val factory = GameSessionViewModelFactory(sessionRepo, playerRepo, pickRepo)
+        sessionViewModel = ViewModelProvider(this, factory).get(GameSessionViewModel::class.java)
 
         Log.d("HISTORY_DEBUG", "🔍 Ładowanie danych dla sesji: $sessionId")
 
@@ -153,7 +153,7 @@ class GameHistoryActivity : AppCompatActivity() {
     private fun showUndoConfirmationDialog() {
         lifecycleScope.launch {
             try {
-                val sessionDetail = sessionDetailViewModel.getSessionWithDetails(sessionId!!)
+                val sessionDetail = sessionViewModel.getSessionWithDetails(sessionId!!)
                 val lastPick = sessionDetail?.picks?.maxByOrNull { it.pickOrder }
 
                 if (lastPick == null) {
@@ -191,7 +191,7 @@ class GameHistoryActivity : AppCompatActivity() {
             try {
                 Log.d("HISTORY_DEBUG", "🔄 Rozpoczęcie cofania wyboru...")
 
-                val success = sessionDetailViewModel.undoLastPick(sessionId!!)
+                val success = sessionViewModel.undoLastPick(sessionId!!)
 
                 runOnUiThread {
                     if (success) {

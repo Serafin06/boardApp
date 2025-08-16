@@ -27,7 +27,6 @@ import kotlin.collections.map
 class CreateSessionActivity : AppCompatActivity() {
 
     private lateinit var sessionViewModel: GameSessionViewModel
-    private lateinit var sessionDetailViewModel: SessionDetailViewModel
     private lateinit var playerAdapter: PlayerSelectAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -53,13 +52,10 @@ class CreateSessionActivity : AppCompatActivity() {
         val pickRepo = GamePickRepo(pickDao)
 
         // ViewModels
-        val sessionFactory = GameSessionViewModelFactory(sessionRepo, playerRepository)
+        val sessionFactory = GameSessionViewModelFactory(sessionRepo, playerRepository, pickRepo)
         sessionViewModel =
             ViewModelProvider(this, sessionFactory).get(GameSessionViewModel::class.java)
 
-        val detailFactory = SessionDetailViewModelFactory(sessionRepo, pickRepo, playerRepository)
-        sessionDetailViewModel =
-            ViewModelProvider(this, detailFactory).get(SessionDetailViewModel::class.java)
 
         // RecyclerView setup
         playerAdapter = PlayerSelectAdapter()
@@ -83,25 +79,11 @@ class CreateSessionActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            Log.d("DEBUG_SESSION", "=== ROZPOCZĘCIE TWORZENIA SESJI ===")
-            Log.d(
-                "DEBUG_SESSION",
-                "Wybrani gracze: ${selectedPlayers.map { "${it.name} (canChoose: ${it.canChooseGame})" }}"
-            )
-
             lifecycleScope.launch {
                 try {
                     // 1. Tworzenie sesji z uczestnikami
                     val sessionId =
                         sessionViewModel.createSessionAndReturnId(timestamp, selectedPlayers)
-                    Log.d("DEBUG_SESSION", "✅ Utworzono sesję: $sessionId")
-
-                    // 2. Sprawdzenie kolejki
-                    val activeQueue = sessionViewModel.getActiveQueue(sessionId)
-                    Log.d(
-                        "DEBUG_SESSION",
-                        "🟢 Aktywna kolejka: ${activeQueue.map { "ID:${it.playerId}, pos:${it.queuePosition}, canPick:${it.canPickInSession}" }}"
-                    )
 
                     // 3. Pobranie pierwszego dostępnego gracza
                     val picker = sessionViewModel.getFirstAvailablePicker(sessionId)
@@ -114,51 +96,28 @@ class CreateSessionActivity : AppCompatActivity() {
                         return@launch
                     }
 
-                    Log.d("DEBUG_SESSION", "👤 Pierwszy dostępny picker: $picker")
-
                     val player = playerRepository.getById(picker.playerId)
-                    Log.d("DEBUG_SESSION", "🎯 Gracz który wybiera: ${player.name}")
 
                     runOnUiThread {
                         val dialog = AlertDialog.Builder(this@CreateSessionActivity)
                             .setTitle("${player.name} wybiera grę")
                             .setMessage("Ciekawe co wybierze")
                             .setPositiveButton("OK") { _, _ ->
-                                Log.d("DEBUG_SESSION", "=== UŻYTKOWNIK NACISNĄŁ OK ===")
 
                                 lifecycleScope.launch {
                                     try {
                                         // KROK 1: Zapisz wybór gry i automatycznie przesuń gracza
-                                        Log.d(
-                                            "DEBUG_SESSION",
-                                            "📝 Zapisywanie wyboru i przesuwanie gracza..."
-                                        )
 
-                                        val success = sessionDetailViewModel.makeGamePick(
+                                        val success = sessionViewModel.makeGamePick(
                                             sessionId = sessionId,
                                             playerId = picker.playerId,
                                             gameName = "Kotlin"
                                         )
 
-                                        sessionDetailViewModel.changeQueue(picker.playerId)
+                                        sessionViewModel.changeQueue(picker.playerId)
 
 
                                         if (success) {
-                                            Log.d(
-                                                "DEBUG_SESSION",
-                                                "✅ Wybór zapisany i gracz przesunięty"
-                                            )
-
-                                            // Sprawdź nowy stan kolejki
-                                            val newQueue =
-                                                sessionViewModel.getActiveQueue(sessionId)
-                                            Log.d(
-                                                "DEBUG_SESSION",
-                                                "📋 Nowa kolejka: ${newQueue.map { "ID:${it.playerId}, pos:${it.queuePosition}" }}"
-                                            )
-
-                                            // KROK 2: Przejście do historii
-                                            Log.d("DEBUG_SESSION", "✅ Przechodzę do historii...")
                                             runOnUiThread {
                                                 val intent = Intent(
                                                     this@CreateSessionActivity,
@@ -169,10 +128,6 @@ class CreateSessionActivity : AppCompatActivity() {
                                                 finish()
                                             }
                                         } else {
-                                            Log.e(
-                                                "DEBUG_SESSION",
-                                                "❌ Błąd podczas zapisywania wyboru"
-                                            )
                                             runOnUiThread {
                                                 Toast.makeText(
                                                     this@CreateSessionActivity,

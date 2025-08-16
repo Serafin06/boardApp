@@ -8,18 +8,16 @@ import android.util.Log
 
 class GameSessionViewModel(
     private val sessionRepo: GameSessionRepo,
-    private val playerRepo: PlayerRepo
+    private val playerRepo: PlayerRepo,
+    private val gamePickRepo: GamePickRepo
 ) : ViewModel() {
 
     suspend fun createSessionAndReturnId(date: Long, selectedPlayers: List<Player>): String {
-        Log.d("SESSION_VM", "🎯 Tworzenie sesji z ${selectedPlayers.size} graczami")
-        Log.d("SESSION_VM", "📋 Gracze: ${selectedPlayers.map { "${it.name} (canChoose: ${it.canChooseGame}, queuePos: ${it.queuePosition})" }}")
 
         return sessionRepo.createSessionWithParticipants(date, selectedPlayers)
     }
 
     suspend fun getAllSessions(): List<GameSession> {
-        Log.d("SESSION_VM", "📋 Pobieranie wszystkich sesji")
         return sessionRepo.getAllSessions()
     }
 
@@ -36,68 +34,77 @@ class GameSessionViewModel(
         return picker
     }
 
-    /**
-     * Przesuwa gracza na koniec kolejki po tym jak wybierze grę
-     * @param sessionId - ID sesji
-     * @param participant - gracz do przesunięcia
-     */
-    suspend fun movePlayerToEndOfQueue(sessionId: String, participant: GameSessionParticipant) {
-        Log.d("SESSION_VM", "🔄 Przesuwanie gracza ${participant.playerId} na koniec kolejki")
-        sessionRepo.moveParticipantToEndOfQueue(sessionId, participant)
-        Log.d("SESSION_VM", "✅ Gracz przesunięty na koniec kolejki")
-    }
-
-    /**
-     * Pomija gracza w kolejce (np. gdy jest nieobecny)
-     * @param sessionId - ID sesji
-     * @param playerId - ID gracza do pominięcia
-     */
     suspend fun skipPlayer(sessionId: String, playerId: Int) {
-        Log.d("SESSION_VM", "⏭️ Pomijanie gracza $playerId w sesji $sessionId")
+
         sessionRepo.skipParticipant(sessionId, playerId)
-        Log.d("SESSION_VM", "✅ Gracz pominięty")
+
     }
 
-    // ========== METODY DLA UI ==========
-    // Te metody dostarczają dane w formacie przyjaznym dla interfejsu użytkownika
-
-    /**
-     * Pobiera uczestników sesji wraz z ich nazwami (nie tylko ID)
-     * Używane gdy potrzebujemy wyświetlić imiona graczy, nie tylko ID
-     * @param sessionId - ID sesji
-     * @return Lista uczestników z wypełnionymi nazwami
-     */
     suspend fun getParticipantsWithNames(sessionId: String): List<ParticipantWithName> {
-        Log.d("SESSION_VM", "📋 Pobieranie uczestników z nazwami dla sesji: $sessionId")
         val participants = sessionRepo.getParticipantsWithNames(sessionId)
-        Log.d("SESSION_VM", "✅ Pobrano ${participants.size} uczestników z nazwami")
         return participants
     }
 
-    /**
-     * Alias dla getFirstAvailablePicker - zwraca aktualnego gracza który wybiera
-     * @param sessionId - ID sesji
-     * @return Aktualny gracz wybierający lub null
-     */
-    suspend fun getCurrentPicker(sessionId: String): GameSessionParticipant? {
-        Log.d("SESSION_VM", "🎯 Pobieranie aktualnego gracza wybierającego")
-        return sessionRepo.getFirstAvailablePicker(sessionId)
+    suspend fun getSessionWithDetails(sessionId: String): SessionDetail? {
+        val session = sessionRepo.getSessionById(sessionId) ?: return null
+        val participants = sessionRepo.getParticipantsWithNames(sessionId)
+        val picks = gamePickRepo.getAllPicksForSession(sessionId)
+
+        return SessionDetail(
+            session = session,
+            participants = participants,
+            picks = picks
+        )
+    }
+
+    suspend fun changeQueue(playerId: Int) {
+        // Pobierz wszystkich graczy posortowanych według kolejki
+        val allPlayers = playerRepo.getAllQueue()
+
+        // Znajdź maksymalną pozycję w kolejce
+        val maxPosition = allPlayers.mapNotNull { it.queuePosition }.maxOrNull() ?: 0
+
+        // Ustaw gracza na końcu kolejki
+        playerRepo.updatePlayerQueuePosition(playerId, maxPosition + 1)
+
+    }
+
+    suspend fun makeGamePick(sessionId: String, playerId: Int, gameName: String): Boolean {
+
+            gamePickRepo.insertWithOrder(sessionId, playerId, gameName)
+            return true
+    }
+
+    suspend fun undoLastPick(sessionId: String): Boolean {
+        return gamePickRepo.undoLastPick(sessionId, sessionRepo)
     }
 }
 
-/**
- * Factory do tworzenia GameSessionViewModel z wymaganymi zależnościami
- * Android wymaga Factory gdy ViewModel ma parametry konstruktora
- */
+
 class GameSessionViewModelFactory(
     private val sessionRepo: GameSessionRepo,
-    private val playerRepo: PlayerRepo
+    private val playerRepo: PlayerRepo,
+    private val gamePickRepo: GamePickRepo
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(GameSessionViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return GameSessionViewModel(sessionRepo, playerRepo) as T
+            return GameSessionViewModel(sessionRepo, playerRepo, gamePickRepo) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
     }
 }
+
+data class SessionDetail(
+    val session: GameSession,
+    val participants: List<ParticipantWithName>,
+    val picks: List<GamePick>
+)
+
+data class GamePickDisplayItem(
+    val playerName: String,
+    val gameName: String,
+    val timestamp: Long,
+    val pickOrder: Int,
+    val canUndo: Boolean = false
+)

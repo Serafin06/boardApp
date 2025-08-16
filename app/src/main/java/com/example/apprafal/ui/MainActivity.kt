@@ -33,9 +33,12 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+
         val adapter = PlayerListAdapter()
         binding.recyclerView.adapter = adapter
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
+
+        setupObservers()
 
         viewModel.allPlayers.observe(this, Observer {
             adapter.submitList(it)
@@ -56,16 +59,24 @@ class MainActivity : AppCompatActivity() {
                     builder.setView(input)
 
                     builder.setPositiveButton("OK") { _, _ ->
-                        val position = input.text.toString().toIntOrNull()
-                        if (position != null) {
-                            viewModel.addPlayer(name, position, canChoose)
-                            binding.editTextPlayerName.text.clear()
-                        } else
-                            Toast.makeText(this, "Gracz nie został dodany", Toast.LENGTH_SHORT).show()
+                        val positionText = input.text.toString()
+                        if (positionText.isNotBlank()) {
+                            val position = positionText.toIntOrNull()
+                            if (position != null && position > 0) {
+                                // ViewModel obsłuży walidację i wyświetli odpowiedni Toast
+                                viewModel.addPlayer(name, position, canChoose)
+                            } else {
+                                Toast.makeText(this, "Pozycja musi być liczbą większą od 0", Toast.LENGTH_SHORT).show()
+                            }
+                        } else {
+                            Toast.makeText(this, "Podaj pozycję w kolejce", Toast.LENGTH_SHORT).show()
+                        }
                     }
 
-                    builder.setNegativeButton("Anuluj") { dialog, _ -> dialog.cancel()
-                        Toast.makeText(this, "Gracz nie został dodany", Toast.LENGTH_SHORT).show()}
+                    builder.setNegativeButton("Anuluj") { dialog, _ ->
+                        dialog.cancel()
+                        Toast.makeText(this, "Gracz nie został dodany", Toast.LENGTH_SHORT).show()
+                    }
 
                     builder.show()
                 } else {
@@ -94,6 +105,26 @@ class MainActivity : AppCompatActivity() {
             // Kolejka znajdzie najnowszą sesję automatycznie
             Log.d("MAIN_DEBUG", "🎯 Otwieranie kolejki graczy...")
             startActivity(Intent(this, QueueActivity::class.java))
+        }
+    }
+
+    private fun setupObservers() {
+        // Obserwuj wiadomości Toast
+        viewModel.toastMessage.observe(this) { message ->
+            if (message.isNotEmpty()) {
+                Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+                viewModel.clearToastMessage()
+            }
+        }
+
+        // Obserwuj powodzenie dodania gracza
+        viewModel.playerAddSuccess.observe(this) { success ->
+            if (success) {
+                // Wyczyść formularz po pomyślnym dodaniu
+                binding.editTextPlayerName.text.clear()
+                binding.checkboxCanChoose.isChecked = false
+            }
+            // Jeśli nie udało się dodać, pozostaw formularz do poprawy
         }
     }
 }

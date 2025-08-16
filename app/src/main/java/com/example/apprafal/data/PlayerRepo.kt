@@ -8,7 +8,9 @@ class PlayerRepo (private val dao: PlayerDao) {
     suspend fun insert(player: Player) = dao.insert(player)
     suspend fun getById(id: Int): Player = dao.getById(id)
 
+    //Kolejka graczy ktozy moga wybierac
     fun getQueue(): LiveData<List<Player>> = dao.getQueue()
+
 
     suspend fun updatePlayerQueuePosition(playerId: Int, newPosition: Int) {
         val player = dao.getPlayerById(playerId)
@@ -17,6 +19,20 @@ class PlayerRepo (private val dao: PlayerDao) {
             dao.updatePlayer(updatedPlayer)
         }
     }
+
+    //sprawdzanie pozycji, czy juz taka jest
+    suspend fun isQueuePositionTaken(position: Int): Boolean {
+        // Pozycja -1 oznacza wyłączenie z wybierania - może być użyta przez wielu graczy
+        if (position == -1) return false
+
+        // Pobierz wszystkich graczy i sprawdź czy ktoś ma już tę pozycję
+        val allPlayers = dao.getAllQueue()
+        return allPlayers.any { player ->
+            player.queuePosition == position
+        }
+    }
+
+
     suspend fun getPlayerById(playerId: Int): Player? = dao.getPlayerById(playerId)
 
     suspend fun getAllQueue(): List<Player> = dao.getAllQueue()
