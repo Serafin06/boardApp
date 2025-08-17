@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.apprafal.data.*
 import android.util.Log
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 
 class GameSessionViewModel(
@@ -52,25 +54,27 @@ class GameSessionViewModel(
     }
 
     suspend fun changeQueue(playerId: Int) {
-        val position = playerRepo.getQueuePosition(playerId)
-        val playersInQueue = playerRepo.getQueueSize()
+        withContext(Dispatchers.IO) {
+            val position = playerRepo.getQueuePosition(playerId)
+            val playersInQueue = playerRepo.getQueueSize()
 
-        // Ustaw gracza na końcu kolejki
-        playerRepo.updatePlayerQueuePosition(playerId, position + playersInQueue)
+            // Ustaw gracza na końcu kolejki
+            playerRepo.updatePlayerQueuePosition(playerId, position + playersInQueue)
 
-        // Pobierz wszystkich graczy posortowanych według kolejki
-        val allPlayers = playerRepo.getAllQueue()
+            // Pobierz wszystkich graczy posortowanych według kolejki
+            val allPlayers = playerRepo.getAllQueue()
 
-        // Znajdź min pozycję w kolejce
-        val minPosition = allPlayers.mapNotNull { it.queuePosition }.minOrNull() ?: 0
+            // Znajdź min pozycję w kolejce
+            val minPosition = allPlayers.mapNotNull { it.queuePosition }.minOrNull() ?: 0
 
-        if (minPosition > 20) {
-            val modulo = 4 * playersInQueue
+            if (minPosition > 20) {
+                val modulo = 4 * playersInQueue
 
-            allPlayers.forEach { player ->
-                val currentPosition = player.queuePosition ?: 0
-                val newPosition = currentPosition % modulo
-                playerRepo.updatePlayerQueuePosition(player.id, newPosition)
+                allPlayers.forEach { player ->
+                    val currentPosition = player.queuePosition ?: 0
+                    val newPosition = currentPosition % modulo
+                    playerRepo.updatePlayerQueuePosition(player.id, newPosition)
+                }
             }
         }
     }
