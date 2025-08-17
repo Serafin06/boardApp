@@ -168,4 +168,8 @@ class GameSessionRepo(
         Log.d("SESSION_REPO", "✅ Pobrano ${participants.size} uczestników z nazwami")
         return participants
     }
+
+    suspend fun getAllParticipants(sessionId: String): List<GameSessionParticipant> {
+        return participantDao.getAllParticipants(sessionId)
+    }
 }

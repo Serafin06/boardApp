@@ -13,7 +13,6 @@ class GameSessionViewModel(
 ) : ViewModel() {
 
     suspend fun createSessionAndReturnId(date: Long, selectedPlayers: List<Player>): String {
-
         return sessionRepo.createSessionWithParticipants(date, selectedPlayers)
     }
 
@@ -22,22 +21,17 @@ class GameSessionViewModel(
     }
 
     suspend fun getActiveQueue(sessionId: String): List<GameSessionParticipant> {
-
         val queue = sessionRepo.getActiveQueue(sessionId)
         return queue
     }
 
     suspend fun getFirstAvailablePicker(sessionId: String): GameSessionParticipant? {
-
         val picker = sessionRepo.getFirstAvailablePicker(sessionId)
-
         return picker
     }
 
     suspend fun skipPlayer(sessionId: String, playerId: Int) {
-
         sessionRepo.skipParticipant(sessionId, playerId)
-
     }
 
     suspend fun getParticipantsWithNames(sessionId: String): List<ParticipantWithName> {
@@ -58,9 +52,7 @@ class GameSessionViewModel(
     }
 
     suspend fun changeQueue(playerId: Int) {
-        //pobieram obecna kolejke gracza
         val position = playerRepo.getQueuePosition(playerId)
-
         val playersInQueue = playerRepo.getQueueSize()
 
         // Ustaw gracza na końcu kolejki
@@ -70,10 +62,9 @@ class GameSessionViewModel(
         val allPlayers = playerRepo.getAllQueue()
 
         // Znajdź min pozycję w kolejce
-        val minPosition = allPlayers.mapNotNull { it.queuePosition }.min()
+        val minPosition = allPlayers.mapNotNull { it.queuePosition }.minOrNull() ?: 0
 
         if (minPosition > 20) {
-
             val modulo = 4 * playersInQueue
 
             allPlayers.forEach { player ->
@@ -85,16 +76,15 @@ class GameSessionViewModel(
     }
 
     suspend fun makeGamePick(sessionId: String, playerId: Int, gameName: String): Boolean {
-
-            gamePickRepo.insertWithOrder(sessionId, playerId, gameName)
-            return true
+        gamePickRepo.insertWithOrder(sessionId, playerId, gameName)
+        return true
     }
 
+    // POPRAWIONA FUNKCJA - przekazuje playerRepo
     suspend fun undoLastPick(sessionId: String): Boolean {
-        return gamePickRepo.undoLastPick(sessionId, sessionRepo)
+        return gamePickRepo.undoLastPick(sessionId, sessionRepo, playerRepo)
     }
 }
-
 
 class GameSessionViewModelFactory(
     private val sessionRepo: GameSessionRepo,

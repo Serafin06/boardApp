@@ -58,6 +58,9 @@ interface GameSessionParticipantDao {
         updateQueuePosition(participantId, maxPos + 1)
     }
 
+    @Query("SELECT * FROM session_participants WHERE sessionId = :sessionId")
+    suspend fun getAllParticipants(sessionId: String): List<GameSessionParticipant>
+
     // Pomocnicze query dla UI
     @Query("""
         SELECT sp.*, p.name as playerName
