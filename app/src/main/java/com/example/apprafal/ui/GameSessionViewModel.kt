@@ -58,15 +58,30 @@ class GameSessionViewModel(
     }
 
     suspend fun changeQueue(playerId: Int) {
+        //pobieram obecna kolejke gracza
+        val position = playerRepo.getQueuePosition(playerId)
+
+        val playersInQueue = playerRepo.getQueueSize()
+
+        // Ustaw gracza na końcu kolejki
+        playerRepo.updatePlayerQueuePosition(playerId, position + playersInQueue)
+
         // Pobierz wszystkich graczy posortowanych według kolejki
         val allPlayers = playerRepo.getAllQueue()
 
-        // Znajdź maksymalną pozycję w kolejce
-        val maxPosition = allPlayers.mapNotNull { it.queuePosition }.maxOrNull() ?: 0
+        // Znajdź min pozycję w kolejce
+        val minPosition = allPlayers.mapNotNull { it.queuePosition }.min()
 
-        // Ustaw gracza na końcu kolejki
-        playerRepo.updatePlayerQueuePosition(playerId, maxPosition + 1)
+        if (minPosition > 20) {
 
+            val modulo = 4 * playersInQueue
+
+            allPlayers.forEach { player ->
+                val currentPosition = player.queuePosition ?: 0
+                val newPosition = currentPosition % modulo
+                playerRepo.updatePlayerQueuePosition(player.id, newPosition)
+            }
+        }
     }
 
     suspend fun makeGamePick(sessionId: String, playerId: Int, gameName: String): Boolean {

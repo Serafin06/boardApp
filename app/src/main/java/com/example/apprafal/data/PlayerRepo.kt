@@ -11,6 +11,12 @@ class PlayerRepo (private val dao: PlayerDao) {
     //Kolejka graczy ktozy moga wybierac
     fun getQueue(): LiveData<List<Player>> = dao.getQueue()
 
+    //ilosc graczy ktora moze wybierac
+    fun getQueueSize(): Int = dao.getQueueSize()
+
+    //pobieranie pozycji gracza
+    suspend fun getQueuePosition(id: Int): Int = dao.getQueuePosition(id)
+
 
     suspend fun updatePlayerQueuePosition(playerId: Int, newPosition: Int) {
         val player = dao.getPlayerById(playerId)
