@@ -136,7 +136,7 @@ class GameHistoryActivity : AppCompatActivity() {
                         emptyView.visibility = View.GONE
 
                         adapter.submitList(picksWithNames)
-                        undoButton.isEnabled = picksWithNames.isNotEmpty()
+                        undoButton.isEnabled = picksWithNames.isNotEmpty() //do poprawy, teraz gdy gracze sie niepisywali ti nie ma zadnego zapisanego gracza zrobic if?
                     }
                 } catch (e: Exception) {
                     Log.e("HISTORY_DEBUG", "❌ Błąd podczas mapowania: ${e.message}", e)
