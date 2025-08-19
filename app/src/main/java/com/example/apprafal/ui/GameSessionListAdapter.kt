@@ -14,6 +14,7 @@ class GameSessionListAdapter : androidx.recyclerview.widget.ListAdapter<GameSess
     GameSessionDiffCallback()
 ) {
 
+
     inner class SessionViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         fun bind(session: GameSession) {
             val dateFormat = java.text.SimpleDateFormat("dd.MM.yyyy HH:mm", java.util.Locale.getDefault())

@@ -202,6 +202,7 @@ class GameHistoryActivity : AppCompatActivity() {
 
                 val success = sessionViewModel.undoLastPick(sessionId!!)
 
+
                 runOnUiThread {
                     if (success) {
                         Log.d("HISTORY_DEBUG", "✅ Pomyślnie cofnięto wybór i przywrócono kolejkę")
@@ -210,6 +211,10 @@ class GameHistoryActivity : AppCompatActivity() {
                             "Cofnięto ostatni wybór i przywrócono kolejkę",
                             Toast.LENGTH_SHORT
                         ).show()
+
+                        findLatestSession()
+
+
                     } else {
                         Log.e("HISTORY_DEBUG", "❌ Nie udało się cofnąć wyboru")
                         Toast.makeText(

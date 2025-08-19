@@ -67,7 +67,7 @@ class GameSessionViewModel(
             // Znajdź min pozycję w kolejce
             val minPosition = allPlayers.mapNotNull { it.queuePosition }.minOrNull() ?: 0
 
-            if (minPosition > 20) {
+            if (minPosition > 25) {
                 val modulo = 4 * playersInQueue
 
                 allPlayers.forEach { player ->
@@ -90,34 +90,43 @@ class GameSessionViewModel(
 
     // POPRAWIONA FUNKCJA - przekazuje playerRepo
     suspend fun undoLastPick(sessionId: String): Boolean {
-        return gamePickRepo.undoLastPick(sessionId, sessionRepo, playerRepo)
-    }
-}
-
-class GameSessionViewModelFactory(
-    private val sessionRepo: GameSessionRepo,
-    private val playerRepo: PlayerRepo,
-    private val gamePickRepo: GamePickRepo
-) : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(GameSessionViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return GameSessionViewModel(sessionRepo, playerRepo, gamePickRepo) as T
+        return try {
+            val spr = gamePickRepo.undoLastPick(sessionId, sessionRepo, playerRepo)
+            if (spr == true){
+            // Usuń całą sesję (CASCADE automatycznie usunie participants i picks)
+            sessionRepo.deleteByID(sessionId)
+            true}
+            else false
+        } catch (e: Exception) {
+            Log.e("SESSION_VM", "Błąd podczas usuwania sesji: ${e.message}")
+            false
         }
-        throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
     }
 }
 
-data class SessionDetail(
-    val session: GameSession,
-    val participants: List<ParticipantWithName>,
-    val picks: List<GamePick>
-)
+    class GameSessionViewModelFactory(
+        private val sessionRepo: GameSessionRepo,
+        private val playerRepo: PlayerRepo,
+        private val gamePickRepo: GamePickRepo
+    ) : ViewModelProvider.Factory {
+        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+            if (modelClass.isAssignableFrom(GameSessionViewModel::class.java)) {
+                @Suppress("UNCHECKED_CAST")
+                return GameSessionViewModel(sessionRepo, playerRepo, gamePickRepo) as T
+            }
+            throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
+        }
+    }
 
-data class GamePickDisplayItem(
-    val playerName: String,
-    val gameName: String,
-    val timestamp: Long,
-    val pickOrder: Int,
-    val canUndo: Boolean = false
-)
+    data class SessionDetail(
+        val session: GameSession,
+        val participants: List<ParticipantWithName>,
+        val picks: List<GamePick>
+    )
+    data class GamePickDisplayItem(
+        val playerName: String,
+        val gameName: String,
+        val timestamp: Long,
+        val pickOrder: Int,
+        val canUndo: Boolean = false
+    )
