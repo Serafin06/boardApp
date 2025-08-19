@@ -21,8 +21,16 @@ import kotlinx.coroutines.launch
 
 class GameHistoryActivity : AppCompatActivity() {
 
-    private lateinit var adapter: GamePickListAdapter
     private lateinit var sessionViewModel: GameSessionViewModel
+    private val playerRepo = PlayerRepo(AppDatabase.getDatabase(this).playerDao())
+    private val pickRepo = GamePickRepo(AppDatabase.getDatabase(this).gamePickDao())
+    private val database = AppDatabase.getDatabase(this)
+    private val sessionDao = database.gameSessionDao()
+    private val participantDao = database.gameSessionParticipantDao()
+    private val sessionRepo = GameSessionRepo(sessionDao, participantDao)
+
+    private val factory = GameSessionViewModelFactory(sessionRepo, playerRepo, pickRepo)
+
     private var sessionId: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -44,11 +52,6 @@ class GameHistoryActivity : AppCompatActivity() {
     private fun findLatestSession() {
         lifecycleScope.launch {
             try {
-                val database = AppDatabase.getDatabase(this@GameHistoryActivity)
-                val sessionDao = database.gameSessionDao()
-                val participantDao = database.gameSessionParticipantDao()
-                val sessionRepo = GameSessionRepo(sessionDao, participantDao)
-
                 val latestSession = sessionRepo.getLatestSession()
 
                 if (latestSession != null) {
@@ -66,7 +69,11 @@ class GameHistoryActivity : AppCompatActivity() {
             } catch (e: Exception) {
                 Log.e("HISTORY_DEBUG", "❌ Błąd podczas szukania sesji: ${e.message}", e)
                 runOnUiThread {
-                    Toast.makeText(this@GameHistoryActivity, "Błąd: ${e.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(
+                        this@GameHistoryActivity,
+                        "Błąd: ${e.message}",
+                        Toast.LENGTH_SHORT
+                    ).show()
                     showNoGamesState()
                 }
             }
@@ -74,110 +81,94 @@ class GameHistoryActivity : AppCompatActivity() {
     }
 
     private fun setupHistoryView() {
-        if (sessionId == null) {
-            showNoGamesState()
-            return
-        }
-
-        // Inicjalizacja widoków
         val recyclerView = findViewById<RecyclerView>(R.id.historyRecyclerView)
         val undoButton = findViewById<Button>(R.id.undoLastPickButton)
         val emptyView = findViewById<TextView>(R.id.emptyHistoryText)
 
-        adapter = GamePickListAdapter()
-        recyclerView.adapter = adapter
+        // PROSTY ADAPTER
+        val sessionAdapter = GameSessionListAdapter()
+        recyclerView.adapter = sessionAdapter
         recyclerView.layoutManager = LinearLayoutManager(this)
 
-        // Inicjalizacja repozytoriów i ViewModel
-        val database = AppDatabase.getDatabase(applicationContext)
-        val sessionDao = database.gameSessionDao()
-        val participantDao = database.gameSessionParticipantDao()
-        val sessionRepo = GameSessionRepo(sessionDao, participantDao)
-        val pickDao = database.gamePickDao()
-        val pickRepo = GamePickRepo(pickDao)
-        val playerDao = database.playerDao()
-        val playerRepo = PlayerRepo(playerDao)
+        Log.d("HISTORY_DEBUG", "🔍 Ładowanie 5 ostatnich sesji...")
 
-        val factory = GameSessionViewModelFactory(sessionRepo, playerRepo, pickRepo)
-        sessionViewModel = ViewModelProvider(this, factory).get(GameSessionViewModel::class.java)
+        // UŻYCIE TWOJEJ METODY getLast5Sessions()
+        lifecycleScope.launch {
+            try {
+                val sessions = sessionRepo.getLast5Sessions()
+                Log.d("HISTORY_DEBUG", "📋 Otrzymano ${sessions.size} sesji")
 
-        Log.d("HISTORY_DEBUG", "🔍 Ładowanie danych dla sesji: $sessionId")
-
-        // Obserwacja wyborów gier - OSTATNIE 5 GIER
-        pickRepo.getPicksForSession(sessionId!!).observe(this) { allPicks ->
-            Log.d("HISTORY_DEBUG", "📋 Otrzymano ${allPicks.size} wyborów gier")
-
-            if (allPicks.isEmpty()) {
-                // BRAK GIER - pokaż komunikat
-                showNoGamesState()
-                return@observe
-            }
-
-            lifecycleScope.launch {
-                try {
-                    // Weź ostatnie 5 wyborów
-                    val last5Picks = allPicks.take(5)
-
-                    Log.d("HISTORY_DEBUG", "🎯 Pokazuję ostatnie ${last5Picks.size} wyborów")
-
-                    val picksWithNames = last5Picks.map { pick ->
-                        val player = playerRepo.getById(pick.playerId)
-                        GamePickWithPlayerName(
-                            playerName = player.name,
-                            gameName = pick.gameName,
-                            timestamp = pick.timestamp,
-                            originalPick = pick
-                        )
-                    }
-
-                    runOnUiThread {
-                        // POKAŻ LISTĘ GIER
+                runOnUiThread {
+                    if (sessions.isEmpty()) {
+                        showNoGamesState()
+                    } else {
                         recyclerView.visibility = View.VISIBLE
                         emptyView.visibility = View.GONE
 
-                        adapter.submitList(picksWithNames)
-                        undoButton.isEnabled = picksWithNames.isNotEmpty()
+                        // Po prostu przekaż List<GameSession> do adaptera
+                        sessionAdapter.submitList(sessions)
+                        undoButton.isEnabled = sessions.isNotEmpty()
+
+                        // Ustaw najnowszą sesję dla undo
+                        sessionId = sessions.firstOrNull()?.id
+
+                        Log.d("HISTORY_DEBUG", "✅ Wyświetlono ${sessions.size} sesji")
                     }
-                } catch (e: Exception) {
-                    Log.e("HISTORY_DEBUG", "❌ Błąd podczas mapowania: ${e.message}", e)
-                    runOnUiThread {
-                        showNoGamesState()
-                    }
+                }
+            } catch (e: Exception) {
+                Log.e("HISTORY_DEBUG", "❌ Błąd podczas ładowania sesji: ${e.message}", e)
+                runOnUiThread {
+                    showNoGamesState()
                 }
             }
         }
 
-        // Obsługa przycisku cofania
+        // Obsługa przycisku cofania (dla najnowszej sesji)
         undoButton.setOnClickListener {
             showUndoConfirmationDialog()
         }
     }
 
+
     // Obsługa braku gier
     private fun showNoGamesState() {
         val recyclerView = findViewById<RecyclerView>(R.id.historyRecyclerView)
-        val undoButton = findViewById<Button>(R.id.undoLastPickButton)
         val emptyView = findViewById<TextView>(R.id.emptyHistoryText)
 
         recyclerView.visibility = View.GONE
         emptyView.visibility = View.VISIBLE
         emptyView.text = "Brak gier w historii"
-        undoButton.isEnabled = false
     }
 
     private fun showUndoConfirmationDialog() {
+        Log.d("HISTORY_DEBUG", "showUndoConfirmationDialog wywołane!")
+
+        sessionViewModel = ViewModelProvider(this, factory)[GameSessionViewModel::class.java]
+
+        if (sessionId == null) {
+            Toast.makeText(this, "Brak aktywnej sesji", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+
         lifecycleScope.launch {
             try {
+                // Sprawdź czy w tej sesji są jakieś wybory do cofnięcia
                 val sessionDetail = sessionViewModel.getSessionWithDetails(sessionId!!)
                 val lastPick = sessionDetail?.picks?.maxByOrNull { it.pickOrder }
 
                 if (lastPick == null) {
                     runOnUiThread {
-                        Toast.makeText(this@GameHistoryActivity, "Brak wyborów do cofnięcia", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            this@GameHistoryActivity,
+                            "Brak wyborów do cofnięcia w tej sesji",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                     return@launch
                 }
 
+                // Jeśli jest co cofać, pokaż dialog potwierdzenia
                 val database = AppDatabase.getDatabase(applicationContext)
                 val player = database.playerDao().getById(lastPick.playerId)
 
@@ -192,9 +183,13 @@ class GameHistoryActivity : AppCompatActivity() {
                         .show()
                 }
             } catch (e: Exception) {
-                Log.e("HISTORY_DEBUG", "❌ Błąd podczas pobierania ostatniego wyboru: ${e.message}", e)
+                Log.e("HISTORY_DEBUG", "Błąd podczas sprawdzania wyborów: ${e.message}", e)
                 runOnUiThread {
-                    Toast.makeText(this@GameHistoryActivity, "Błąd: ${e.message}", Toast.LENGTH_LONG).show()
+                    Toast.makeText(
+                        this@GameHistoryActivity,
+                        "Błąd: ${e.message}",
+                        Toast.LENGTH_LONG
+                    ).show()
                 }
             }
         }
@@ -210,16 +205,28 @@ class GameHistoryActivity : AppCompatActivity() {
                 runOnUiThread {
                     if (success) {
                         Log.d("HISTORY_DEBUG", "✅ Pomyślnie cofnięto wybór i przywrócono kolejkę")
-                        Toast.makeText(this@GameHistoryActivity, "Cofnięto ostatni wybór i przywrócono kolejkę", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            this@GameHistoryActivity,
+                            "Cofnięto ostatni wybór i przywrócono kolejkę",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     } else {
                         Log.e("HISTORY_DEBUG", "❌ Nie udało się cofnąć wyboru")
-                        Toast.makeText(this@GameHistoryActivity, "Nie udało się cofnąć wyboru", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            this@GameHistoryActivity,
+                            "Nie udało się cofnąć wyboru",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 }
             } catch (e: Exception) {
                 Log.e("HISTORY_DEBUG", "❌ Błąd podczas cofania: ${e.message}", e)
                 runOnUiThread {
-                    Toast.makeText(this@GameHistoryActivity, "Błąd: ${e.message}", Toast.LENGTH_LONG).show()
+                    Toast.makeText(
+                        this@GameHistoryActivity,
+                        "Błąd: ${e.message}",
+                        Toast.LENGTH_LONG
+                    ).show()
                 }
             }
         }

@@ -102,55 +102,6 @@ class GameSessionRepo(
     }
 
 
-    suspend fun getParticipantsForSession(sessionId: String): List<GameSessionParticipant> {
-        Log.d("SESSION_REPO", "📋 Pobieranie wszystkich uczestników sesji: $sessionId")
-        return participantDao.getParticipantsForSession(sessionId)
-    }
-
-
-    suspend fun moveParticipantToEndOfQueue(sessionId: String, participant: GameSessionParticipant) {
-        Log.d("SESSION_REPO", "🔄 ROZPOCZYNAM przesuwanie gracza ${participant.playerId} na koniec kolejki...")
-        Log.d("SESSION_REPO", "📋 Stan PRZED przesunięciem:")
-        Log.d("SESSION_REPO", "  - PlayerID: ${participant.playerId}")
-        Log.d("SESSION_REPO", "  - Obecna pozycja: ${participant.queuePosition}")
-        Log.d("SESSION_REPO", "  - Participant ID: ${participant.id}")
-
-        try {
-
-
-            participantDao.moveToEndOfQueue(sessionId, participant.id)
-
-            Log.d("SESSION_REPO", "✅ KROK 2 zakończony - gracz przesunięty")
-
-            // 3. Sprawdź stan PO przesunięciu
-            Log.d("SESSION_REPO", "🔍 SPRAWDZENIE: Pobieranie stanu kolejki PO przesunięciu...")
-            val updatedQueue = getActiveQueue(sessionId)
-            Log.d("SESSION_REPO", "📋 Stan kolejki PO przesunięciu:")
-            updatedQueue.forEach { p ->
-                Log.d("SESSION_REPO", "  - PlayerID: ${p.playerId}, pozycja: ${p.queuePosition}}")
-            }
-
-            // 4. Znajdź i ustaw następnego gracza jako aktualnego pickera
-            Log.d("SESSION_REPO", "🎯 KROK 3: Szukam następnego pickera...")
-            val nextPicker = getFirstAvailablePicker(sessionId)
-
-            if (nextPicker != null) {
-                Log.d("SESSION_REPO", "✅ Znaleziono następnego pickera: ${nextPicker.playerId} (pozycja: ${nextPicker.queuePosition})")
-                updateCurrentPicker(sessionId, nextPicker.playerId)
-                Log.d("SESSION_REPO", "✅ KROK 3 zakończony - następny picker ustawiony")
-            } else {
-                Log.d("SESSION_REPO", "⚠️ Brak następnego pickera - wszyscy wybrali lub są pomijani")
-                updateCurrentPicker(sessionId, null)
-            }
-
-            Log.d("SESSION_REPO", "🎉 SUKCES: Przesunięcie gracza zakończone pomyślnie!")
-
-        } catch (e: Exception) {
-            Log.e("SESSION_REPO", "❌ BŁĄD podczas przesuwania gracza: ${e.message}", e)
-            throw e
-        }
-    }
-
     suspend fun skipParticipant(sessionId: String, playerId: Int) {
         Log.d("SESSION_REPO", "⏭️ Pomijanie gracza $playerId...")
 
@@ -171,5 +122,14 @@ class GameSessionRepo(
 
     suspend fun getAllParticipants(sessionId: String): List<GameSessionParticipant> {
         return participantDao.getAllParticipants(sessionId)
+    }
+
+    suspend fun getLast5Sessions(): List<GameSession> {
+        return sessionDao.getLast5Sessions()
+    }
+
+
+    suspend fun updateGameName(sessionId: String, gameName: String) {
+        sessionDao.updateGameName(sessionId, gameName)
     }
 }

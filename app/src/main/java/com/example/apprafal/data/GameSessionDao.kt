@@ -34,4 +34,10 @@ interface GameSessionDao {
 
     @Query("SELECT * FROM game_sessions ORDER BY date DESC LIMIT 1")
     suspend fun getLatestSession(): GameSession?
+
+    @Query("SELECT * FROM game_sessions ORDER BY date DESC LIMIT 5")
+    suspend fun getLast5Sessions(): List<GameSession>
+
+    @Query("UPDATE game_sessions SET gameName = :gameName WHERE id = :sessionId")
+    suspend fun updateGameName(sessionId: String, gameName: String)
 }

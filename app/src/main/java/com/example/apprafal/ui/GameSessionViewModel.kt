@@ -81,6 +81,10 @@ class GameSessionViewModel(
 
     suspend fun makeGamePick(sessionId: String, playerId: Int, gameName: String): Boolean {
         gamePickRepo.insertWithOrder(sessionId, playerId, gameName)
+
+        // 2. AKTUALIZUJ SESJĘ - ustaw currentPickerId i gameName
+        sessionRepo.updateCurrentPicker(sessionId, playerId)
+        sessionRepo.updateGameName(sessionId, gameName)
         return true
     }
 
