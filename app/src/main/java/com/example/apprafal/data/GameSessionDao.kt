@@ -21,6 +21,9 @@ interface GameSessionDao {
         insertParticipants(participants)
     }
 
+    @Query("DELeTE FROM game_sessions WHERE id = :sessionId")
+    suspend fun deleteSessionById(sessionId: String)
+
 
     @Query("SELECT * FROM game_sessions ORDER BY date DESC")
     suspend fun getAllSessions(): List<GameSession>

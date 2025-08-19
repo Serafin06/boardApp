@@ -132,4 +132,8 @@ class GameSessionRepo(
     suspend fun updateGameName(sessionId: String, gameName: String) {
         sessionDao.updateGameName(sessionId, gameName)
     }
+
+    suspend fun deleteByID(sessionId: String) {
+        sessionDao.deleteSessionById(sessionId)
+    }
 }
